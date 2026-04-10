@@ -55,7 +55,7 @@ async def on_shutdown():
 def home(request: Request):
     return templates.TemplateResponse(
         "index.html",
-        {"request": request, "dimensions_list": DIMENSIONS_LIST}
+        {"request": request, "dimensions_list": DIMENSIONS_LIST},
     )
 
 
@@ -103,15 +103,14 @@ def dashboard(request: Request, user_id: str):
 
     return templates.TemplateResponse(
         "dashboard.html",
-        context={
+        {
             "request": request,
             "user": user_obj,
             "scores": scores,
             "score_history": score_history,
             "training_stats": training_stats,
-            "dimensions": DIMENSIONS,
             "dimensions_list": DIMENSIONS_LIST,
             "total_training": len(records),
             "fun_stats": fun_stats,
-        }
+        },
     )

@@ -62,7 +62,6 @@ def training_home(request: Request, user_id: str, db: Session = Depends(get_db))
     context = {
         "request": request,
         "user": user,
-        "dimensions": DIMENSIONS,
         "dimensions_list": DIMENSIONS_LIST,
         "overviews": overviews,
         "stats": stats,
@@ -100,7 +99,6 @@ def training_dimension(
     context = {
         "request": request,
         "user": user,
-        "dimensions": DIMENSIONS,
         "dimensions_list": DIMENSIONS_LIST,
         "overviews": overviews,
         "stats": stats,

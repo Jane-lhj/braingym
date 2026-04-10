@@ -3,10 +3,15 @@ from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 
-from app.config import TEMPLATES_DIR, DIMENSIONS, DIMENSIONS_LIST
+from app.config import TEMPLATES_DIR, DIMENSIONS_LIST
 from app.database import get_db
 from app.models import User, Assessment
-from app.services.assessment_service import get_assessment_questions, score_assessment
+from app.services.assessment_service import (
+    get_assessment_questions,
+    score_assessment,
+    enrich_question_display,
+    enrich_detail_display,
+)
 
 router = APIRouter(prefix="/assessment")
 templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
@@ -17,12 +22,11 @@ def assessment_page(request: Request, user_id: str, db: Session = Depends(get_db
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         return HTMLResponse("用户不存在", status_code=404)
-    questions = get_assessment_questions()
+    questions = [enrich_question_display(q) for q in get_assessment_questions()]
     context = {
         "request": request,
         "user": user,
         "questions": questions,
-        "dimensions": DIMENSIONS,
         "dimensions_list": DIMENSIONS_LIST,
     }
     return templates.TemplateResponse("assessment.html", context)
@@ -55,12 +59,12 @@ async def submit_assessment(request: Request, user_id: str, db: Session = Depend
     db.commit()
     db.refresh(assessment)
 
+    details = [enrich_detail_display(d) for d in result["details"]]
     context = {
         "request": request,
         "user": user,
         "scores": result["scores"],
-        "details": result["details"],
-        "dimensions": DIMENSIONS,
+        "details": details,
         "dimensions_list": DIMENSIONS_LIST,
         "assessment_id": assessment.id,
     }

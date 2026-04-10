@@ -55,8 +55,8 @@
             <div class="p-4 rounded-2xl border border-gray-100">
                 <div class="flex items-center justify-between mb-2">
                     <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium"
-                          style="background: {{ dimensions[d.dimension].color }}15; color: {{ dimensions[d.dimension].color }}">
-                        {{ dimensions[d.dimension].icon }} {{ d.dimension_name }}
+                          style="background: {{ d.dimension_color }}15; color: {{ d.dimension_color }}">
+                        {{ d.dimension_icon }} {{ d.dimension_name }}
                     </span>
                     <span class="text-lg font-bold" style="color: {% if d.score >= 70 %}#10B981{% elif d.score >= 40 %}#F59E0B{% else %}#EF4444{% endif %}">
                         {{ d.score|int }}分

@@ -6,7 +6,27 @@ from typing import List, Dict
 from app.question_bank.critical_thinking import ASSESSMENT_QUESTIONS as CT_QUESTIONS
 from app.question_bank.question_framing import ASSESSMENT_QUESTIONS as QF_QUESTIONS
 from app.question_bank.creativity import ASSESSMENT_QUESTIONS as CR_QUESTIONS
+from app.config import DIMENSIONS
 from app.services.ai_service import score_open_ended
+
+
+def enrich_question_display(q: dict) -> dict:
+    """Avoid passing nested DIMENSIONS dict into Jinja2 (triggers cache bug on some versions)."""
+    meta = DIMENSIONS.get(q.get("dimension", ""), {})
+    return {
+        **q,
+        "dimension_color": meta.get("color", "#666666"),
+        "dimension_icon": meta.get("icon", ""),
+    }
+
+
+def enrich_detail_display(d: dict) -> dict:
+    meta = DIMENSIONS.get(d.get("dimension", ""), {})
+    return {
+        **d,
+        "dimension_color": meta.get("color", "#666666"),
+        "dimension_icon": meta.get("icon", ""),
+    }
 
 
 def get_assessment_questions(shuffle: bool = True) -> List[dict]:

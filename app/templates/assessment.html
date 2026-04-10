@@ -29,8 +29,8 @@
             <!-- Dimension Badge -->
             <div class="flex flex-wrap items-center gap-2 mb-4">
                 <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium"
-                      style="background: {{ dimensions[q.dimension].color }}15; color: {{ dimensions[q.dimension].color }}">
-                    {{ dimensions[q.dimension].icon }} {{ q.dimension_name }}
+                      style="background: {{ q.dimension_color }}15; color: {{ q.dimension_color }}">
+                    {{ q.dimension_icon }} {{ q.dimension_name }}
                 </span>
                 {% set star = q.get('difficulty', 2) %}
                 <span class="text-xs px-2 py-1 rounded-lg bg-gray-100 text-gray-600 font-medium">
