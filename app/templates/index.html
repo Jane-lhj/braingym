@@ -18,7 +18,7 @@
         <!-- Three abilities: decorative only (not links — avoids "假按钮"体感) -->
         <div class="max-w-md mx-auto mb-12 fade-in">
             <div class="flex justify-center gap-3 flex-wrap">
-                {% for key, dim in dimensions.items() %}
+                {% for dim in dimensions_list %}
                 <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-white/15 text-white/95 text-sm">
                     <span>{{ dim.icon }}</span>
                     <span class="font-medium">{{ dim.name }}</span>

@@ -3,7 +3,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
-from app.config import TEMPLATES_DIR, STATIC_DIR, DIMENSIONS
+from app.config import TEMPLATES_DIR, STATIC_DIR, DIMENSIONS, DIMENSIONS_LIST
 from app.database import init_db, get_db
 from app.models import User
 from app.routers import user, assessment, training, guide
@@ -53,10 +53,9 @@ async def on_shutdown():
 
 @app.get("/", response_class=HTMLResponse)
 def home(request: Request):
-    # Simplified version to avoid Jinja2 issues
     return templates.TemplateResponse(
         "index.html",
-        {"request": request, "dimensions": {}}
+        {"request": request, "dimensions_list": DIMENSIONS_LIST}
     )
 
 

@@ -24,11 +24,19 @@ SCENE_PRESETS = [
     {"key": "academic", "name": "学术硬核", "icon": "🎓", "hint": "用论文、实验设计、学术辩论、数据分析场景出题"},
 ]
 
+# Flattened for Jinja2 compatibility
 DIMENSIONS = {
     "critical_thinking": {"name": "批判性思维", "icon": "🔍", "color": "#EF4444"},
     "question_framing": {"name": "提问力", "icon": "🎯", "color": "#3B82F6"},
     "creativity": {"name": "创造力", "icon": "💡", "color": "#8B5CF6"},
 }
+
+# Create a Jinja2-safe version
+DIMENSIONS_LIST = [
+    {"key": "critical_thinking", "name": "批判性思维", "icon": "🔍", "color": "#EF4444"},
+    {"key": "question_framing", "name": "提问力", "icon": "🎯", "color": "#3B82F6"},
+    {"key": "creativity", "name": "创造力", "icon": "💡", "color": "#8B5CF6"},
+]
 
 # Training difficulty tiers (unlock by average score on previous tier, subjective-friendly)
 TRAINING_LEVELS = [
