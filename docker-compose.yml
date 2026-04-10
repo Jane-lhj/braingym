@@ -1,0 +1,15 @@
+# 1) cp .env.example .env 并填写 LLM_API_KEY（可选，无 key 时部分 AI 功能不可用）
+# 2) mkdir -p data
+# 3) docker compose up --build
+services:
+  web:
+    build: .
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      PORT: "8000"
+      DATABASE_URL: sqlite:////data/braingym.db
+    volumes:
+      - ./data:/data

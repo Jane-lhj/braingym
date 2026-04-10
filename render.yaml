@@ -1,0 +1,21 @@
+# Render Blueprint: https://render.com/docs/blueprint-spec
+# 连接 GitHub 仓库后，Dashboard → New → Blueprint → 选本仓库即可套用。
+# 持久盘仅适用于付费 Web 实例；若只用免费实例，请删除下方 disk 段，并去掉 DATABASE_URL（用默认路径，重启可能丢库）。
+services:
+  - type: web
+    name: braingym
+    runtime: docker
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        value: sqlite:////app/data/braingym.db
+      - key: LLM_BASE_URL
+        value: https://api.deepseek.com
+      - key: LLM_MODEL
+        value: deepseek-chat
+      - key: LLM_API_KEY
+        sync: false
+    disk:
+      name: braingym-data
+      mountPath: /app/data
+      sizeGB: 1

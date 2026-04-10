@@ -1,0 +1,202 @@
+{% extends "base.html" %}
+{% block title %}{{ user.nickname }} 的健脑房{% endblock %}
+
+{% block body %}
+<div class="gradient-bg">
+    <!-- Header -->
+    <div class="px-6 pt-8 pb-16 text-center">
+        <div class="text-4xl mb-2">🧠</div>
+        <h1 class="text-2xl font-bold text-white">{{ user.nickname }} 的健脑房</h1>
+        <p class="text-blue-300 text-sm mt-1">累计训练 {{ total_training }} 题</p>
+    </div>
+</div>
+
+<div class="px-4 -mt-10 max-w-2xl mx-auto pb-12">
+    <!-- Streak & week (lightweight gamification) -->
+    <div class="bg-white rounded-3xl shadow-xl p-5 mb-6 fade-in border border-orange-100">
+        <div class="flex items-start gap-4">
+            <div class="text-4xl leading-none" aria-hidden="true">🔥</div>
+            <div class="flex-1 min-w-0">
+                <h2 class="text-base font-bold text-gray-800">坚持小火苗</h2>
+                <p class="text-sm text-gray-600 mt-1">
+                    {% if fun_stats.streak_days > 0 %}
+                    已连续 <span class="font-black text-orange-600 text-lg">{{ fun_stats.streak_days }}</span> 天有训练
+                    {% else %}
+                    今天练一题即可打卡
+                    {% endif %}
+                </p>
+                <p class="text-xs text-gray-500 mt-2">
+                    本周已有 <span class="font-semibold text-gray-700">{{ fun_stats.week_active_days }}</span> 天来过 · 共练
+                    <span class="font-semibold text-gray-700">{{ fun_stats.week_sessions }}</span> 题次
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dimension guide -->
+    <div class="bg-white rounded-3xl shadow-xl p-6 mb-6 fade-in border-2 border-sky-100">
+        <div class="flex items-center gap-3 mb-3">
+            <div class="w-12 h-12 rounded-2xl bg-sky-50 text-2xl flex items-center justify-center">📖</div>
+            <div class="flex-1">
+                <h2 class="text-lg font-bold text-gray-800">三大能力说明</h2>
+            </div>
+        </div>
+        <a href="/guide/{{ user.id }}"
+           class="block w-full py-3 bg-sky-500 hover:bg-sky-600 text-white rounded-xl font-semibold text-center transition-colors shadow-lg shadow-sky-500/25">
+            查看说明 →
+        </a>
+    </div>
+
+    <!-- Radar Chart Card -->
+    <div class="bg-white rounded-3xl shadow-xl p-6 mb-6 fade-in">
+        <h2 class="text-lg font-bold text-gray-800 mb-4 text-center">
+            {% if scores %}🎯 思维能力雷达图{% else %}📋 开始你的第一次体测{% endif %}
+        </h2>
+
+        {% if scores %}
+        <div class="flex justify-center mb-4">
+            <canvas id="radarChart" width="280" height="280"></canvas>
+        </div>
+        <div class="grid grid-cols-3 gap-3">
+            {% for key, dim in dimensions.items() %}
+            <div class="text-center p-3 rounded-xl" style="background: {{ dim.color }}10">
+                <div class="text-2xl">{{ dim.icon }}</div>
+                <div class="text-xs text-gray-500 mt-1">{{ dim.name }}</div>
+                <div class="text-xl font-black mt-1" style="color: {{ dim.color }}">{{ scores.get(key, 0) }}</div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-8">
+            <div class="text-6xl mb-4">🧪</div>
+            <p class="text-gray-500 mb-6">完成一次体测，了解你的思维能力现状</p>
+        </div>
+        {% endif %}
+
+        <a href="/assessment/{{ user.id }}"
+           class="block mt-6 w-full py-3 bg-brain-600 hover:bg-brain-700 text-white rounded-xl font-semibold text-center transition-colors shadow-lg shadow-brain-600/30">
+            {% if scores %}重新体测{% else %}开始体测{% endif %} →
+        </a>
+    </div>
+
+    {% if score_history|length > 1 %}
+    <div class="bg-white rounded-3xl shadow-xl p-6 mb-6 fade-in">
+        <h2 class="text-lg font-bold text-gray-800 mb-4 text-center">📈 体测成绩趋势</h2>
+        <div class="flex justify-center">
+            <canvas id="trendChart" width="500" height="240"></canvas>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Training Zone Entry -->
+    <div class="bg-white rounded-3xl shadow-xl p-6 mb-6 fade-in">
+        <h2 class="text-lg font-bold text-gray-800 mb-1">🏋️ 训练区</h2>
+        <div class="space-y-3">
+            {% for key, dim in dimensions.items() %}
+            <a href="/training/{{ user.id }}/{{ key }}"
+               class="block p-4 rounded-2xl border-2 border-gray-100 hover:border-gray-200 card-hover"
+               style="border-left: 4px solid {{ dim.color }}">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <span class="text-2xl">{{ dim.icon }}</span>
+                        <div>
+                            <div class="font-semibold text-gray-800">{{ dim.name }}</div>
+                            <div class="text-xs text-gray-400">
+                                已训练 {{ training_stats.get(key, {}).get('total', 0) }} 题
+                                {% if training_stats.get(key, {}).get('avg_score', 0) > 0 %}
+                                · 平均 {{ training_stats.get(key, {}).get('avg_score', 0) }} 分
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                    </svg>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+
+        <a href="/training/{{ user.id }}"
+           class="block mt-4 w-full py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-semibold text-center transition-colors">
+            进入训练区 →
+        </a>
+    </div>
+</div>
+
+{% if scores %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var ctx = document.getElementById('radarChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'radar',
+        data: {
+            labels: [
+                {% for key, dim in dimensions.items() %}'{{ dim.name }}'{% if not loop.last %},{% endif %}{% endfor %}
+            ],
+            datasets: [{
+                data: [
+                    {% for key in dimensions %}{{ scores.get(key, 0) }}{% if not loop.last %},{% endif %}{% endfor %}
+                ],
+                backgroundColor: 'rgba(79, 125, 249, 0.15)',
+                borderColor: 'rgba(79, 125, 249, 0.8)',
+                borderWidth: 2,
+                pointBackgroundColor: 'rgba(79, 125, 249, 1)',
+                pointRadius: 5,
+            }]
+        },
+        options: {
+            responsive: false,
+            scales: {
+                r: {
+                    beginAtZero: true,
+                    max: 100,
+                    ticks: { stepSize: 20, font: { size: 10 } },
+                    pointLabels: { font: { size: 13, weight: 'bold' } },
+                    grid: { color: 'rgba(0,0,0,0.06)' },
+                }
+            },
+            plugins: { legend: { display: false } }
+        }
+    });
+
+    {% if score_history|length > 1 %}
+    var trendEl = document.getElementById('trendChart');
+    if (trendEl) {
+        var history = {{ score_history | tojson }};
+        var labels = history.map(function(h) { return h.date; });
+        var dimKeys = [{% for key in dimensions %}'{{ key }}'{% if not loop.last %},{% endif %}{% endfor %}];
+        var dimNames = [{% for key, dim in dimensions.items() %}'{{ dim.name }}'{% if not loop.last %},{% endif %}{% endfor %}];
+        var dimColors = [{% for key, dim in dimensions.items() %}'{{ dim.color }}'{% if not loop.last %},{% endif %}{% endfor %}];
+        var datasets = dimKeys.map(function(k, i) {
+            return {
+                label: dimNames[i],
+                data: history.map(function(h) { return h.scores[k] || 0; }),
+                borderColor: dimColors[i],
+                backgroundColor: dimColors[i] + '20',
+                borderWidth: 2,
+                pointRadius: 4,
+                pointBackgroundColor: dimColors[i],
+                tension: 0.3,
+                fill: false
+            };
+        });
+        new Chart(trendEl.getContext('2d'), {
+            type: 'line',
+            data: { labels: labels, datasets: datasets },
+            options: {
+                responsive: false,
+                scales: {
+                    y: { beginAtZero: true, max: 100, ticks: { stepSize: 20 } }
+                },
+                plugins: {
+                    legend: { position: 'bottom', labels: { boxWidth: 12, padding: 15 } }
+                }
+            }
+        });
+    }
+    {% endif %}
+});
+</script>
+{% endif %}
+{% endblock %}

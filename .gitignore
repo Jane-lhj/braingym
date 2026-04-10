@@ -1,0 +1,8 @@
+.env
+braingym.db
+braingym.db-journal
+__pycache__/
+*.py[cod]
+*.db-journal
+.venv/
+venv/

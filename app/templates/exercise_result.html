@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block title %}训练结果 — 健脑房{% endblock %}
+
+{% block body %}
+<div class="px-6 pt-8 pb-6" style="background: {{ dimension_info.color }}">
+    <div class="flex items-center gap-3">
+        <span class="text-3xl">{{ exercise_info.get('icon', '🏋️') }}</span>
+        <div>
+            <h1 class="text-xl font-bold text-white">训练结果</h1>
+            <p class="text-white/70 text-sm">{{ dimension_info.name }} · {{ exercise_info.get('name', '') }}</p>
+        </div>
+    </div>
+</div>
+
+<div class="px-4 max-w-2xl mx-auto pb-12 mt-6">
+    <!-- Score Card -->
+    <div class="bg-white rounded-3xl shadow-xl p-6 mb-6 fade-in text-center">
+        <!-- Score Circle -->
+        <div class="relative inline-flex items-center justify-center mb-4">
+            <svg width="140" height="140" class="-rotate-90">
+                <circle cx="70" cy="70" r="60" fill="none" stroke="#f3f4f6" stroke-width="10"/>
+                <circle cx="70" cy="70" r="60" fill="none"
+                        stroke="{{ dimension_info.color }}"
+                        stroke-width="10"
+                        stroke-linecap="round"
+                        stroke-dasharray="{{ 377 }}"
+                        stroke-dashoffset="{{ 377 - (377 * result.score / 100) }}"
+                        class="score-ring"/>
+            </svg>
+            <div class="absolute text-center">
+                <div class="text-3xl font-black" style="color: {{ dimension_info.color }}">{{ result.score|int }}</div>
+                <div class="text-xs text-gray-400">分</div>
+            </div>
+        </div>
+
+        <div class="text-lg font-bold text-gray-800 mb-1">
+            {% if result.score >= 80 %}🌟 太棒了！
+            {% elif result.score >= 60 %}👍 不错！
+            {% elif result.score >= 40 %}💪 继续加油！
+            {% else %}🎯 还需要练习！{% endif %}
+        </div>
+    </div>
+
+    <!-- Feedback -->
+    <div class="bg-white rounded-3xl shadow-xl p-6 mb-6 fade-in">
+        <h3 class="font-bold text-gray-800 mb-3">小结</h3>
+        <div class="text-sm text-gray-800 leading-relaxed whitespace-pre-line bg-gray-50 rounded-2xl p-4 border border-gray-100">{{ result.feedback }}</div>
+
+        <h3 class="font-bold text-gray-800 mt-6 mb-3">🗣️ 你的回答</h3>
+        <div class="text-gray-600 leading-relaxed bg-gray-50 rounded-2xl p-4 whitespace-pre-line">{{ user_answer }}</div>
+
+        {% if result.get('ai_answer') %}
+        <h3 class="font-bold text-gray-800 mt-6 mb-3">🤖 AI 参考答案</h3>
+        <div class="text-gray-700 leading-relaxed bg-green-50 rounded-2xl p-4 border border-green-100 whitespace-pre-line">{{ result.ai_answer }}</div>
+        {% endif %}
+    </div>
+
+
+    {% if glossary %}
+    <details class="bg-white rounded-3xl shadow-xl p-6 mb-6 fade-in text-sm text-gray-700">
+        <summary class="cursor-pointer font-bold text-gray-800 select-none">📖 这些题在考什么？（再瞄一眼名词）</summary>
+        <ul class="mt-3 space-y-2">
+            {% for term in glossary %}
+            <li><span class="font-medium text-gray-900">{{ term.title }}</span> — {{ term.one_liner }}</li>
+            {% endfor %}
+        </ul>
+        <a href="/guide/{{ user.id }}#{{ dimension }}" class="inline-block mt-3 text-xs font-medium" style="color: {{ dimension_info.color }}">打开 {{ dimension_info.name }} 能力说明 →</a>
+    </details>
+    {% endif %}
+
+    <!-- Actions -->
+    <div class="flex gap-3 fade-in">
+        <a href="/training/{{ user.id }}/{{ dimension }}/{{ exercise_type }}{{ exercise_query }}"
+           class="flex-1 py-3 text-white rounded-xl font-semibold text-center transition-colors shadow-lg"
+           style="background: {{ dimension_info.color }}; box-shadow: 0 10px 25px {{ dimension_info.color }}40">
+            继续训练 →
+        </a>
+        <a href="/training/{{ user.id }}"
+           class="flex-1 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-semibold text-center transition-colors">
+            换个项目
+        </a>
+    </div>
+</div>
+{% endblock %}

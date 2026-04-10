@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% block title %}体测结果 — 健脑房{% endblock %}
+
+{% block body %}
+<div class="gradient-bg px-6 pt-8 pb-16 text-center">
+    <div class="text-4xl mb-2">🎯</div>
+    <h1 class="text-2xl font-bold text-white">体测报告</h1>
+    <p class="text-blue-300 text-sm mt-1">{{ user.nickname }} 的思维能力评估</p>
+</div>
+
+<div class="px-4 -mt-10 max-w-2xl mx-auto pb-12">
+    <!-- Radar Chart -->
+    <div class="bg-white rounded-3xl shadow-xl p-6 mb-6 fade-in">
+        <h2 class="text-lg font-bold text-gray-800 mb-4 text-center">思维能力雷达图</h2>
+        <div class="flex justify-center mb-6">
+            <canvas id="radarChart" width="280" height="280"></canvas>
+        </div>
+
+        <!-- Score Cards -->
+        <div class="grid grid-cols-3 gap-3 mb-6">
+            {% for key, dim in dimensions.items() %}
+            <div class="text-center p-4 rounded-2xl transition-shadow hover:shadow-md" style="background: {{ dim.color }}08; border: 2px solid {{ dim.color }}20">
+                <div class="text-3xl mb-1">{{ dim.icon }}</div>
+                <div class="text-xs text-gray-500">{{ dim.name }}</div>
+                <div class="text-3xl font-black mt-1" style="color: {{ dim.color }}">{{ scores.get(key, 0) }}</div>
+                <div class="text-xs mt-1" style="color: {{ dim.color }}">
+                    {% if scores.get(key, 0) >= 80 %}优秀 🌟
+                    {% elif scores.get(key, 0) >= 60 %}良好 👍
+                    {% elif scores.get(key, 0) >= 40 %}中等 💪
+                    {% else %}待提升 🎯{% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Overall -->
+        {% set avg_score = (scores.values()|list|sum / scores|length)|round|int %}
+        <div class="text-center p-4 rounded-2xl bg-brain-50 border-2 border-brain-100">
+            <div class="text-sm text-brain-600 font-medium">综合思维指数</div>
+            <div class="text-4xl font-black text-brain-700 mt-1">{{ avg_score }}</div>
+            <div class="text-sm text-brain-500 mt-1">
+                {% if avg_score >= 80 %}🧠 思维达人！继续保持
+                {% elif avg_score >= 60 %}💡 基础扎实，还有提升空间
+                {% elif avg_score >= 40 %}🔧 需要系统训练
+                {% else %}🌱 欢迎来到健脑房！让我们开始吧{% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Detail -->
+    <div class="bg-white rounded-3xl shadow-xl p-6 mb-6 fade-in">
+        <h2 class="text-lg font-bold text-gray-800 mb-4">📋 各题小结</h2>
+        <div class="space-y-4">
+            {% for d in details %}
+            <div class="p-4 rounded-2xl border border-gray-100">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium"
+                          style="background: {{ dimensions[d.dimension].color }}15; color: {{ dimensions[d.dimension].color }}">
+                        {{ dimensions[d.dimension].icon }} {{ d.dimension_name }}
+                    </span>
+                    <span class="text-lg font-bold" style="color: {% if d.score >= 70 %}#10B981{% elif d.score >= 40 %}#F59E0B{% else %}#EF4444{% endif %}">
+                        {{ d.score|int }}分
+                    </span>
+                </div>
+                <div class="text-sm text-gray-500 mb-2 line-clamp-2">{{ d.user_answer[:80] }}{% if d.user_answer|length > 80 %}...{% endif %}</div>
+                <div class="text-sm text-gray-800 bg-gray-50 rounded-xl p-3 whitespace-pre-line leading-relaxed">{{ d.feedback }}</div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- CTA -->
+    <div class="flex gap-3 fade-in">
+        <a href="/training/{{ user.id }}" class="flex-1 py-3 bg-brain-600 hover:bg-brain-700 text-white rounded-xl font-semibold text-center transition-colors shadow-lg shadow-brain-600/30">
+            开始训练 🏋️
+        </a>
+        <a href="/dashboard/{{ user.id }}" class="flex-1 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-semibold text-center transition-colors">
+            返回首页
+        </a>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const ctx = document.getElementById('radarChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'radar',
+        data: {
+            labels: [{% for key, dim in dimensions.items() %}'{{ dim.name }}'{% if not loop.last %},{% endif %}{% endfor %}],
+            datasets: [{
+                data: [{% for key in dimensions %}{{ scores.get(key, 0) }}{% if not loop.last %},{% endif %}{% endfor %}],
+                backgroundColor: 'rgba(79, 125, 249, 0.15)',
+                borderColor: 'rgba(79, 125, 249, 0.8)',
+                borderWidth: 2.5,
+                pointBackgroundColor: 'rgba(79, 125, 249, 1)',
+                pointRadius: 6,
+            }]
+        },
+        options: {
+            responsive: false,
+            scales: {
+                r: {
+                    beginAtZero: true, max: 100,
+                    ticks: { stepSize: 20, font: { size: 10 } },
+                    pointLabels: { font: { size: 14, weight: 'bold' } },
+                    grid: { color: 'rgba(0,0,0,0.06)' },
+                }
+            },
+            plugins: { legend: { display: false } },
+            animation: { duration: 1500, easing: 'easeOutQuart' },
+        }
+    });
+});
+</script>
+{% endblock %}

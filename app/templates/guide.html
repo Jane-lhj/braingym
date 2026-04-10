@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}为什么练这三项 — 健脑房{% endblock %}
+
+{% block body %}
+<div class="gradient-bg px-6 pt-8 pb-16 text-center">
+    <div class="text-4xl mb-2">🧠</div>
+    <h1 class="text-2xl font-bold text-white">AI 时代，人该练什么？</h1>
+    <p class="text-blue-300 text-sm mt-2 max-w-sm mx-auto leading-relaxed">机器越强，这三项能力反而越值钱</p>
+</div>
+
+<div class="px-4 -mt-10 max-w-2xl mx-auto pb-12">
+
+    {% for s in sections %}
+    <section id="{{ s.key }}" class="bg-white rounded-3xl shadow-xl p-6 mb-6 fade-in scroll-mt-6">
+        <div class="flex items-center gap-3 mb-3">
+            <div class="w-11 h-11 rounded-2xl flex items-center justify-center text-xl" style="background: {{ s.color }}15">
+                {{ s.icon }}
+            </div>
+            <h2 class="text-lg font-bold text-gray-800">{{ s.name }}</h2>
+        </div>
+
+        <p class="text-base font-semibold text-gray-900 mb-2">{{ s.hook }}</p>
+        <p class="text-sm text-gray-600 leading-relaxed mb-4">{{ s.body }}</p>
+
+        <div class="space-y-2">
+            {% for before, after in s.contrast %}
+            <div class="flex gap-2 text-sm">
+                <div class="flex-1 rounded-xl bg-gray-50 border border-gray-100 p-3">
+                    <span class="text-xs text-gray-400 block mb-1">没练过</span>
+                    <span class="text-gray-500">{{ before }}</span>
+                </div>
+                <div class="flex-1 rounded-xl p-3" style="background: {{ s.color }}08; border: 1px solid {{ s.color }}20">
+                    <span class="text-xs font-medium block mb-1" style="color: {{ s.color }}">练过之后</span>
+                    <span class="text-gray-800">{{ after }}</span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <a href="/training/{{ user.id }}/{{ s.key }}"
+           class="mt-5 block w-full py-3 rounded-xl font-semibold text-center text-white transition-opacity hover:opacity-95"
+           style="background: {{ s.color }}">
+            开始练 {{ s.name }} →
+        </a>
+    </section>
+    {% endfor %}
+
+    <div class="flex gap-3">
+        <a href="/dashboard/{{ user.id }}"
+           class="flex-1 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-semibold text-center transition-colors">
+            ← 返回首页
+        </a>
+        <a href="/training/{{ user.id }}"
+           class="flex-1 py-3 bg-brain-600 hover:bg-brain-700 text-white rounded-xl font-semibold text-center transition-colors shadow-lg shadow-brain-600/30">
+            训练区
+        </a>
+        <span class="text-white/30">|</span>
+        <a href="/dashboard/{{ user.id }}" class="text-white/70 hover:text-white">🏠 健脑房首页</a>
+    </div>
+</div>
+{% endblock %}

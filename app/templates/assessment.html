@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+{% block title %}入馆体测 — 健脑房{% endblock %}
+
+{% block body %}
+<div class="gradient-bg px-6 pt-8 pb-16 text-center">
+    <div class="text-4xl mb-2">🧪</div>
+    <h1 class="text-2xl font-bold text-white">入馆体测</h1>
+    <p class="text-blue-300 text-sm mt-1">{{ questions|length }} 道开放题</p>
+</div>
+
+<div class="px-4 -mt-10 max-w-2xl mx-auto pb-12">
+    <form id="assessmentForm" action="/assessment/{{ user.id }}/submit" method="post">
+        <!-- Progress Bar -->
+        <div class="bg-white rounded-3xl shadow-xl p-4 mb-4 fade-in">
+            <div class="flex items-center justify-between text-sm text-gray-500 mb-2">
+                <span>进度</span>
+                <span id="progressText">0 / {{ questions|length }}</span>
+            </div>
+            <div class="w-full bg-gray-100 rounded-full h-2">
+                <div id="progressBar" class="bg-brain-500 h-2 rounded-full transition-all duration-500" style="width: 0%"></div>
+            </div>
+        </div>
+
+        <!-- Questions -->
+        {% for q in questions %}
+        <div class="question-card bg-white rounded-3xl shadow-xl p-6 mb-4 fade-in {% if not loop.first %}hidden{% endif %}"
+             data-index="{{ loop.index0 }}" data-dimension="{{ q.dimension }}">
+
+            <!-- Dimension Badge -->
+            <div class="flex flex-wrap items-center gap-2 mb-4">
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium"
+                      style="background: {{ dimensions[q.dimension].color }}15; color: {{ dimensions[q.dimension].color }}">
+                    {{ dimensions[q.dimension].icon }} {{ q.dimension_name }}
+                </span>
+                {% set star = q.get('difficulty', 2) %}
+                <span class="text-xs px-2 py-1 rounded-lg bg-gray-100 text-gray-600 font-medium">
+                    {% if star == 1 %}⭐ 入门{% elif star == 2 %}⭐⭐ 进阶{% else %}⭐⭐⭐ 挑战{% endif %}
+                </span>
+            </div>
+
+            <div class="text-xs text-gray-400 mb-2">第 {{ loop.index }} / {{ questions|length }} 题</div>
+
+            <!-- Prompt -->
+            <div class="text-gray-800 font-medium leading-relaxed mb-6 whitespace-pre-line">{{ q.prompt }}</div>
+
+            <div class="mb-3 rounded-xl border border-amber-100 bg-amber-50/80 px-3 py-2 flex items-center justify-between gap-2">
+                <span class="text-xs font-medium text-amber-900/90">⏱️ 节奏</span>
+                <span class="text-lg font-mono font-bold text-amber-900 tabular-nums q-timer" data-sec="60">01:00</span>
+            </div>
+
+            <!-- Answer Area -->
+            <textarea name="answer_{{ q.id }}" rows="5" placeholder="写下你的思考..."
+                      class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-brain-500 resize-none answer-input"></textarea>
+
+            <!-- Navigation -->
+            <div class="flex gap-3 mt-6">
+                {% if not loop.first %}
+                <button type="button" onclick="showQuestion({{ loop.index0 - 1 }})"
+                        class="flex-1 py-3 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-xl font-medium transition-colors">
+                    ← 上一题
+                </button>
+                {% endif %}
+
+                {% if loop.last %}
+                <button type="submit" id="submitBtn"
+                        class="flex-1 py-3 bg-brain-600 hover:bg-brain-700 text-white rounded-xl font-semibold transition-colors shadow-lg shadow-brain-600/30">
+                    提交体测
+                </button>
+                {% else %}
+                <button type="button" onclick="showQuestion({{ loop.index0 + 1 }})"
+                        class="flex-1 py-3 bg-brain-600 hover:bg-brain-700 text-white rounded-xl font-semibold transition-colors shadow-lg shadow-brain-600/30">
+                    下一题 →
+                </button>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </form>
+</div>
+
+<script>
+const totalQuestions = {{ questions|length }};
+
+function showQuestion(index) {
+    document.querySelectorAll('.question-card').forEach((card, i) => {
+        card.classList.toggle('hidden', i !== index);
+    });
+    updateProgress();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function updateProgress() {
+    let count = 0;
+    document.querySelectorAll('textarea.answer-input').forEach(el => { if(el.value.trim()) count++; });
+    const pct = Math.round((count / totalQuestions) * 100);
+    document.getElementById('progressBar').style.width = pct + '%';
+    document.getElementById('progressText').textContent = count + ' / ' + totalQuestions;
+}
+
+document.querySelectorAll('.answer-input').forEach(el => {
+    el.addEventListener('input', updateProgress);
+});
+
+document.getElementById('assessmentForm').addEventListener('submit', function() {
+    var btn = document.getElementById('submitBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="inline-flex items-center gap-2"><svg class="animate-spin h-5 w-5" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>AI 评分中...</span>';
+});
+
+(function() {
+    function startTimer(el) {
+        var total = parseInt(el.getAttribute('data-sec'), 10) || 180;
+        function tick() {
+            var m = Math.floor(total / 60);
+            var s = total % 60;
+            el.textContent = (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
+            if (total <= 0) {
+                el.classList.add('text-red-600');
+                el.textContent = '00:00';
+                return;
+            }
+            total -= 1;
+            setTimeout(tick, 1000);
+        }
+        tick();
+    }
+    var visible = document.querySelector('.question-card:not(.hidden) .q-timer');
+    if (visible) {
+        visible.dataset.started = '1';
+        startTimer(visible);
+    }
+    window._assessmentShowQuestion = showQuestion;
+    showQuestion = function(index) {
+        window._assessmentShowQuestion(index);
+        var t = document.querySelector('.question-card:not(.hidden) .q-timer');
+        if (t && !t.dataset.started) {
+            t.dataset.started = '1';
+            startTimer(t);
+        }
+    };
+})();
+</script>
+{% endblock %}

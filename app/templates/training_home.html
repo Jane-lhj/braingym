@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% block title %}训练区 — 健脑房{% endblock %}
+
+{% block body %}
+<div class="gradient-bg px-6 pt-8 pb-16 text-center">
+    <div class="text-4xl mb-2">🏋️</div>
+    <h1 class="text-2xl font-bold text-white">训练区</h1>
+    <p class="text-blue-300 text-sm mt-1">选择训练维度和项目，开始锻炼</p>
+    {% if fun_stats is defined %}
+    <p class="text-orange-200/95 text-xs mt-2 font-medium">
+        🔥 {% if fun_stats.streak_days > 0 %}连续 {{ fun_stats.streak_days }} 天有训练{% else %}今天练一题即可打卡{% endif %}
+        · 本周 {{ fun_stats.week_active_days }} 天 / {{ fun_stats.week_sessions }} 题次
+    </p>
+    {% endif %}
+    <div class="mt-4 flex flex-wrap justify-center gap-2 text-sm">
+        <a href="/dashboard/{{ user.id }}" class="px-4 py-2 rounded-xl bg-white/15 text-white hover:bg-white/25 transition-colors">← 我的健脑房</a>
+        <a href="/" class="px-4 py-2 rounded-xl bg-white/10 text-white/90 hover:bg-white/20 transition-colors">换昵称重进</a>
+    </div>
+</div>
+
+<div class="px-4 -mt-10 max-w-2xl mx-auto pb-24">
+    <div class="bg-sky-50 border border-sky-100 rounded-2xl p-4 mb-6 text-sm text-sky-900 leading-relaxed">
+        <span class="font-semibold">💡 不了解维度含义？</span>
+        先看 <a href="/guide/{{ user.id }}" class="underline font-medium text-sky-800">三大能力说明</a>；做题时可在题目下方展开「这些题在考什么」。
+    </div>
+
+    {% for dim_key, dim in dimensions.items() %}
+    <div id="{{ dim_key }}" class="bg-white rounded-3xl shadow-xl p-6 mb-6 fade-in scroll-mt-6">
+        <!-- Dimension Header -->
+        <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center gap-3">
+                <div class="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl" style="background: {{ dim.color }}12">
+                    {{ dim.icon }}
+                </div>
+                <div>
+                    <h2 class="text-lg font-bold text-gray-800">{{ dim.name }}</h2>
+                    <div class="text-xs text-gray-400">
+                        已训练 {{ stats.get(dim_key, {}).get('total', 0) }} 题
+                        {% if stats.get(dim_key, {}).get('avg_score', 0) > 0 %}
+                        · 平均 {{ stats.get(dim_key, {}).get('avg_score', 0) }} 分
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Exercises -->
+        {% if overviews.get(dim_key) %}
+        <div class="space-y-2">
+            {% for ex_key, ex in overviews[dim_key].exercises.items() %}
+            <a href="/training/{{ user.id }}/{{ dim_key }}/{{ ex_key }}?level=1"
+               class="block p-4 rounded-2xl border border-gray-100 hover:border-gray-200 card-hover transition-all">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <span class="text-xl">{{ ex.icon }}</span>
+                        <div>
+                            <div class="font-medium text-gray-800">{{ ex.name }}</div>
+                            <div class="text-xs text-gray-400">{{ ex.description }}</div>
+                        </div>
+                    </div>
+                    <svg class="w-4 h-4 text-gray-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                    </svg>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+    {% endfor %}
+
+    <a href="/dashboard/{{ user.id }}"
+       class="block w-full py-3 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-xl font-medium text-center transition-colors mb-4">
+        ← 返回我的健脑房
+    </a>
+</div>
+
+<div class="fixed bottom-0 left-0 right-0 z-40 border-t border-gray-200/80 bg-white/95 backdrop-blur-md safe-area-pb">
+    <div class="max-w-2xl mx-auto px-4 py-3 flex gap-2">
+        <a href="/dashboard/{{ user.id }}" class="flex-1 py-2.5 rounded-xl text-center text-sm font-semibold text-white bg-brain-600 hover:bg-brain-700 shadow-sm">我的健脑房</a>
+        <a href="/training/{{ user.id }}" class="flex-1 py-2.5 rounded-xl text-center text-sm font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200">刷新本页</a>
+    </div>
+</div>
+{% if selected_dimension is defined and selected_dimension %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var el = document.getElementById('{{ selected_dimension }}');
+    if (el) el.scrollIntoView({behavior: 'smooth', block: 'start'});
+});
+</script>
+{% endif %}
+{% endblock %}

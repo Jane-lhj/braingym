@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}健脑房 BrainGym — AI时代的思维健身房{% endblock %}
+
+{% block body %}
+<div class="gradient-bg min-h-screen flex flex-col">
+    <!-- Hero -->
+    <div class="flex-1 flex flex-col items-center justify-center px-6 text-center">
+        <div class="fade-in">
+            <div class="text-6xl mb-6">🧠</div>
+            <h1 class="text-5xl font-black text-white mb-4 tracking-tight">健脑房</h1>
+            <p class="text-xl text-blue-200 mb-2 font-light">BrainGym</p>
+            <p class="text-lg text-blue-300 mb-12 max-w-md mx-auto leading-relaxed">
+                AI 时代，身体去健身房，大脑来健脑房。<br>
+                每天 10 分钟，保持思维锋利。
+            </p>
+        </div>
+
+        <!-- Three abilities: decorative only (not links — avoids "假按钮"体感) -->
+        <div class="max-w-md mx-auto mb-12 fade-in">
+            <div class="flex justify-center gap-3 flex-wrap">
+                {% for key, dim in dimensions.items() %}
+                <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-white/15 text-white/95 text-sm">
+                    <span>{{ dim.icon }}</span>
+                    <span class="font-medium">{{ dim.name }}</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Login -->
+        <div class="glass rounded-3xl p-8 w-full max-w-sm fade-in shadow-2xl">
+            <h2 class="text-lg font-bold text-gray-800 mb-6 text-center">开始训练</h2>
+            <form action="/login" method="post" class="space-y-4">
+                <input
+                    type="text" name="nickname" required
+                    placeholder="输入你的昵称"
+                    class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-brain-500 focus:border-transparent text-center text-lg"
+                >
+                <button
+                    type="submit"
+                    class="w-full py-3 bg-brain-600 hover:bg-brain-700 text-white rounded-xl font-semibold text-lg transition-colors shadow-lg shadow-brain-600/30"
+                >
+                    进入健脑房 →
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="text-center py-6 text-blue-400 text-sm">
+        让思考成为习惯，让大脑永远年轻
+    </div>
+</div>
+{% endblock %}
