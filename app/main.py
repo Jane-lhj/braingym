@@ -53,11 +53,13 @@ async def on_shutdown():
 
 @app.get("/", response_class=HTMLResponse)
 def home(request: Request):
-    context = {
-        "request": request,
-        "dimensions": DIMENSIONS,
-    }
-    return templates.TemplateResponse("index.html", context)
+    return templates.TemplateResponse(
+        "index.html",
+        context={
+            "request": request,
+            "dimensions": DIMENSIONS,
+        }
+    )
 
 
 @app.get("/dashboard/{user_id}", response_class=HTMLResponse)
@@ -102,14 +104,16 @@ def dashboard(request: Request, user_id: str):
 
     fun_stats = build_fun_stats(records)
 
-    context = {
-        "request": request,
-        "user": user_obj,
-        "scores": scores,
-        "score_history": score_history,
-        "training_stats": training_stats,
-        "dimensions": DIMENSIONS,
-        "total_training": len(records),
-        "fun_stats": fun_stats,
-    }
-    return templates.TemplateResponse("dashboard.html", context)
+    return templates.TemplateResponse(
+        "dashboard.html",
+        context={
+            "request": request,
+            "user": user_obj,
+            "scores": scores,
+            "score_history": score_history,
+            "training_stats": training_stats,
+            "dimensions": DIMENSIONS,
+            "total_training": len(records),
+            "fun_stats": fun_stats,
+        }
+    )
