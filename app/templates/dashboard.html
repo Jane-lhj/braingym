@@ -58,11 +58,11 @@
             <canvas id="radarChart" width="280" height="280"></canvas>
         </div>
         <div class="grid grid-cols-3 gap-3">
-            {% for key, dim in dimensions.items() %}
+            {% for dim in dimensions_list %}
             <div class="text-center p-3 rounded-xl" style="background: {{ dim.color }}10">
                 <div class="text-2xl">{{ dim.icon }}</div>
                 <div class="text-xs text-gray-500 mt-1">{{ dim.name }}</div>
-                <div class="text-xl font-black mt-1" style="color: {{ dim.color }}">{{ scores.get(key, 0) }}</div>
+                <div class="text-xl font-black mt-1" style="color: {{ dim.color }}">{{ scores.get(dim.key, 0) }}</div>
             </div>
             {% endfor %}
         </div>
@@ -92,8 +92,8 @@
     <div class="bg-white rounded-3xl shadow-xl p-6 mb-6 fade-in">
         <h2 class="text-lg font-bold text-gray-800 mb-1">🏋️ 训练区</h2>
         <div class="space-y-3">
-            {% for key, dim in dimensions.items() %}
-            <a href="/training/{{ user.id }}/{{ key }}"
+            {% for dim in dimensions_list %}
+            <a href="/training/{{ user.id }}/{{ dim.key }}"
                class="block p-4 rounded-2xl border-2 border-gray-100 hover:border-gray-200 card-hover"
                style="border-left: 4px solid {{ dim.color }}">
                 <div class="flex items-center justify-between">
@@ -102,9 +102,9 @@
                         <div>
                             <div class="font-semibold text-gray-800">{{ dim.name }}</div>
                             <div class="text-xs text-gray-400">
-                                已训练 {{ training_stats.get(key, {}).get('total', 0) }} 题
-                                {% if training_stats.get(key, {}).get('avg_score', 0) > 0 %}
-                                · 平均 {{ training_stats.get(key, {}).get('avg_score', 0) }} 分
+                                已训练 {{ training_stats.get(dim.key, {}).get('total', 0) }} 题
+                                {% if training_stats.get(dim.key, {}).get('avg_score', 0) > 0 %}
+                                · 平均 {{ training_stats.get(dim.key, {}).get('avg_score', 0) }} 分
                                 {% endif %}
                             </div>
                         </div>
@@ -132,11 +132,11 @@ document.addEventListener('DOMContentLoaded', function() {
         type: 'radar',
         data: {
             labels: [
-                {% for key, dim in dimensions.items() %}'{{ dim.name }}'{% if not loop.last %},{% endif %}{% endfor %}
+                {% for dim in dimensions_list %}'{{ dim.name }}'{% if not loop.last %},{% endif %}{% endfor %}
             ],
             datasets: [{
                 data: [
-                    {% for key in dimensions %}{{ scores.get(key, 0) }}{% if not loop.last %},{% endif %}{% endfor %}
+                    {% for dim in dimensions_list %}{{ scores.get(dim.key, 0) }}{% if not loop.last %},{% endif %}{% endfor %}
                 ],
                 backgroundColor: 'rgba(79, 125, 249, 0.15)',
                 borderColor: 'rgba(79, 125, 249, 0.8)',
@@ -165,9 +165,9 @@ document.addEventListener('DOMContentLoaded', function() {
     if (trendEl) {
         var history = {{ score_history | tojson }};
         var labels = history.map(function(h) { return h.date; });
-        var dimKeys = [{% for key in dimensions %}'{{ key }}'{% if not loop.last %},{% endif %}{% endfor %}];
-        var dimNames = [{% for key, dim in dimensions.items() %}'{{ dim.name }}'{% if not loop.last %},{% endif %}{% endfor %}];
-        var dimColors = [{% for key, dim in dimensions.items() %}'{{ dim.color }}'{% if not loop.last %},{% endif %}{% endfor %}];
+        var dimKeys = [{% for dim in dimensions_list %}'{{ dim.key }}'{% if not loop.last %},{% endif %}{% endfor %}];
+        var dimNames = [{% for dim in dimensions_list %}'{{ dim.name }}'{% if not loop.last %},{% endif %}{% endfor %}];
+        var dimColors = [{% for dim in dimensions_list %}'{{ dim.color }}'{% if not loop.last %},{% endif %}{% endfor %}];
         var datasets = dimKeys.map(function(k, i) {
             return {
                 label: dimNames[i],

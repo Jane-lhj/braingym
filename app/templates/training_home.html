@@ -24,8 +24,8 @@
         先看 <a href="/guide/{{ user.id }}" class="underline font-medium text-sky-800">三大能力说明</a>；做题时可在题目下方展开「这些题在考什么」。
     </div>
 
-    {% for dim_key, dim in dimensions.items() %}
-    <div id="{{ dim_key }}" class="bg-white rounded-3xl shadow-xl p-6 mb-6 fade-in scroll-mt-6">
+    {% for dim in dimensions_list %}
+    <div id="{{ dim.key }}" class="bg-white rounded-3xl shadow-xl p-6 mb-6 fade-in scroll-mt-6">
         <!-- Dimension Header -->
         <div class="flex items-center justify-between mb-4">
             <div class="flex items-center gap-3">
@@ -35,9 +35,9 @@
                 <div>
                     <h2 class="text-lg font-bold text-gray-800">{{ dim.name }}</h2>
                     <div class="text-xs text-gray-400">
-                        已训练 {{ stats.get(dim_key, {}).get('total', 0) }} 题
-                        {% if stats.get(dim_key, {}).get('avg_score', 0) > 0 %}
-                        · 平均 {{ stats.get(dim_key, {}).get('avg_score', 0) }} 分
+                        已训练 {{ stats.get(dim.key, {}).get('total', 0) }} 题
+                        {% if stats.get(dim.key, {}).get('avg_score', 0) > 0 %}
+                        · 平均 {{ stats.get(dim.key, {}).get('avg_score', 0) }} 分
                         {% endif %}
                     </div>
                 </div>
@@ -45,10 +45,10 @@
         </div>
 
         <!-- Exercises -->
-        {% if overviews.get(dim_key) %}
+        {% if overviews.get(dim.key) %}
         <div class="space-y-2">
-            {% for ex_key, ex in overviews[dim_key].exercises.items() %}
-            <a href="/training/{{ user.id }}/{{ dim_key }}/{{ ex_key }}?level=1"
+            {% for ex_key, ex in overviews[dim.key].exercises.items() %}
+            <a href="/training/{{ user.id }}/{{ dim.key }}/{{ ex_key }}?level=1"
                class="block p-4 rounded-2xl border border-gray-100 hover:border-gray-200 card-hover transition-all">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center gap-3">

@@ -3,7 +3,7 @@ from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 
-from app.config import TEMPLATES_DIR, DIMENSIONS
+from app.config import TEMPLATES_DIR, DIMENSIONS, DIMENSIONS_LIST
 from app.content.dimension_guide import build_guide_sections
 from app.database import get_db
 from app.models import User
@@ -22,6 +22,7 @@ def dimension_guide_page(request: Request, user_id: str, db: Session = Depends(g
         "request": request,
         "user": user,
         "dimensions": DIMENSIONS,
+        "dimensions_list": DIMENSIONS_LIST,
         "sections": build_guide_sections(),
     }
     return templates.TemplateResponse("guide.html", context)

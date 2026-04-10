@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from urllib.parse import quote
 
-from app.config import TEMPLATES_DIR, DIMENSIONS, SCENE_PRESETS, TRAINING_LEVELS
+from app.config import TEMPLATES_DIR, DIMENSIONS, DIMENSIONS_LIST, SCENE_PRESETS, TRAINING_LEVELS
 from app.database import get_db
 from app.models import User, TrainingRecord
 from app.content.glossary import get_glossary_for_exercise
@@ -63,6 +63,7 @@ def training_home(request: Request, user_id: str, db: Session = Depends(get_db))
         "request": request,
         "user": user,
         "dimensions": DIMENSIONS,
+        "dimensions_list": DIMENSIONS_LIST,
         "overviews": overviews,
         "stats": stats,
         "fun_stats": build_fun_stats(records),
@@ -100,6 +101,7 @@ def training_dimension(
         "request": request,
         "user": user,
         "dimensions": DIMENSIONS,
+        "dimensions_list": DIMENSIONS_LIST,
         "overviews": overviews,
         "stats": stats,
         "selected_dimension": dimension,

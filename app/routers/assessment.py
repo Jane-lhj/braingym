@@ -3,7 +3,7 @@ from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 
-from app.config import TEMPLATES_DIR, DIMENSIONS
+from app.config import TEMPLATES_DIR, DIMENSIONS, DIMENSIONS_LIST
 from app.database import get_db
 from app.models import User, Assessment
 from app.services.assessment_service import get_assessment_questions, score_assessment
@@ -23,6 +23,7 @@ def assessment_page(request: Request, user_id: str, db: Session = Depends(get_db
         "user": user,
         "questions": questions,
         "dimensions": DIMENSIONS,
+        "dimensions_list": DIMENSIONS_LIST,
     }
     return templates.TemplateResponse("assessment.html", context)
 
@@ -60,6 +61,7 @@ async def submit_assessment(request: Request, user_id: str, db: Session = Depend
         "scores": result["scores"],
         "details": result["details"],
         "dimensions": DIMENSIONS,
+        "dimensions_list": DIMENSIONS_LIST,
         "assessment_id": assessment.id,
     }
     return templates.TemplateResponse("assessment_result.html", context)

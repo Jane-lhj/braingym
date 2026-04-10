@@ -110,6 +110,7 @@ def dashboard(request: Request, user_id: str):
             "score_history": score_history,
             "training_stats": training_stats,
             "dimensions": DIMENSIONS,
+            "dimensions_list": DIMENSIONS_LIST,
             "total_training": len(records),
             "fun_stats": fun_stats,
         }

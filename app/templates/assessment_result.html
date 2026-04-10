@@ -18,15 +18,15 @@
 
         <!-- Score Cards -->
         <div class="grid grid-cols-3 gap-3 mb-6">
-            {% for key, dim in dimensions.items() %}
+            {% for dim in dimensions_list %}
             <div class="text-center p-4 rounded-2xl transition-shadow hover:shadow-md" style="background: {{ dim.color }}08; border: 2px solid {{ dim.color }}20">
                 <div class="text-3xl mb-1">{{ dim.icon }}</div>
                 <div class="text-xs text-gray-500">{{ dim.name }}</div>
-                <div class="text-3xl font-black mt-1" style="color: {{ dim.color }}">{{ scores.get(key, 0) }}</div>
+                <div class="text-3xl font-black mt-1" style="color: {{ dim.color }}">{{ scores.get(dim.key, 0) }}</div>
                 <div class="text-xs mt-1" style="color: {{ dim.color }}">
-                    {% if scores.get(key, 0) >= 80 %}优秀 🌟
-                    {% elif scores.get(key, 0) >= 60 %}良好 👍
-                    {% elif scores.get(key, 0) >= 40 %}中等 💪
+                    {% if scores.get(dim.key, 0) >= 80 %}优秀 🌟
+                    {% elif scores.get(dim.key, 0) >= 60 %}良好 👍
+                    {% elif scores.get(dim.key, 0) >= 40 %}中等 💪
                     {% else %}待提升 🎯{% endif %}
                 </div>
             </div>
@@ -86,9 +86,9 @@ document.addEventListener('DOMContentLoaded', function() {
     new Chart(ctx, {
         type: 'radar',
         data: {
-            labels: [{% for key, dim in dimensions.items() %}'{{ dim.name }}'{% if not loop.last %},{% endif %}{% endfor %}],
+            labels: [{% for dim in dimensions_list %}'{{ dim.name }}'{% if not loop.last %},{% endif %}{% endfor %}],
             datasets: [{
-                data: [{% for key in dimensions %}{{ scores.get(key, 0) }}{% if not loop.last %},{% endif %}{% endfor %}],
+                data: [{% for dim in dimensions_list %}{{ scores.get(dim.key, 0) }}{% if not loop.last %},{% endif %}{% endfor %}],
                 backgroundColor: 'rgba(79, 125, 249, 0.15)',
                 borderColor: 'rgba(79, 125, 249, 0.8)',
                 borderWidth: 2.5,
