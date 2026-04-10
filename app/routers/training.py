@@ -59,14 +59,15 @@ def training_home(request: Request, user_id: str, db: Session = Depends(get_db))
             "avg_score": round(sum(r.score for r in dim_records) / len(dim_records)) if dim_records else 0,
         }
 
-    return templates.TemplateResponse("training_home.html", {
+    context = {
         "request": request,
         "user": user,
         "dimensions": DIMENSIONS,
         "overviews": overviews,
         "stats": stats,
         "fun_stats": build_fun_stats(records),
-    })
+    }
+    return templates.TemplateResponse("training_home.html", context)
 
 
 @router.get("/{user_id}/{dimension}", response_class=HTMLResponse)
@@ -95,7 +96,7 @@ def training_dimension(
             "avg_score": round(sum(r.score for r in dim_records) / len(dim_records)) if dim_records else 0,
         }
 
-    return templates.TemplateResponse("training_home.html", {
+    context = {
         "request": request,
         "user": user,
         "dimensions": DIMENSIONS,
@@ -103,7 +104,8 @@ def training_dimension(
         "stats": stats,
         "selected_dimension": dimension,
         "fun_stats": build_fun_stats(records),
-    })
+    }
+    return templates.TemplateResponse("training_home.html", context)
 
 
 @router.get("/{user_id}/{dimension}/{exercise_type}", response_class=HTMLResponse)
@@ -148,7 +150,7 @@ async def exercise_page(
     overview = get_dimension_overview(dimension)
     ex_info = overview["exercises"].get(exercise_type, {}) if overview else {}
 
-    return templates.TemplateResponse("exercise.html", {
+    context = {
         "request": request,
         "user": user,
         "dimension": dimension,
@@ -164,7 +166,8 @@ async def exercise_page(
         "max_unlocked_level": max_u,
         "exercise_query": _exercise_query(training_level, scene),
         "exercise_query_level_only": _exercise_query(training_level, ""),
-    })
+    }
+    return templates.TemplateResponse("exercise.html", context)
 
 
 @router.post("/{user_id}/{dimension}/{exercise_type}/submit")
@@ -210,7 +213,7 @@ async def submit_exercise(
     overview = get_dimension_overview(dimension)
     ex_info = overview["exercises"].get(exercise_type, {}) if overview else {}
 
-    return templates.TemplateResponse("exercise_result.html", {
+    context = {
         "request": request,
         "user": user,
         "dimension": dimension,
@@ -225,4 +228,5 @@ async def submit_exercise(
         "max_unlocked_level": max_unlocked_level(db, user_id, dimension, exercise_type),
         "exercise_query": _exercise_query(training_level, scene),
         "exercise_query_level_only": _exercise_query(training_level, ""),
-    })
+    }
+    return templates.TemplateResponse("exercise_result.html", context)

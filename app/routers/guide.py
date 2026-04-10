@@ -18,12 +18,10 @@ def dimension_guide_page(request: Request, user_id: str, db: Session = Depends(g
     if not user:
         return HTMLResponse("用户不存在", status_code=404)
 
-    return templates.TemplateResponse(
-        "guide.html",
-        {
-            "request": request,
-            "user": user,
-            "dimensions": DIMENSIONS,
-            "sections": build_guide_sections(),
-        },
-    )
+    context = {
+        "request": request,
+        "user": user,
+        "dimensions": DIMENSIONS,
+        "sections": build_guide_sections(),
+    }
+    return templates.TemplateResponse("guide.html", context)

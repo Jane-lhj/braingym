@@ -18,12 +18,13 @@ def assessment_page(request: Request, user_id: str, db: Session = Depends(get_db
     if not user:
         return HTMLResponse("用户不存在", status_code=404)
     questions = get_assessment_questions()
-    return templates.TemplateResponse("assessment.html", {
+    context = {
         "request": request,
         "user": user,
         "questions": questions,
         "dimensions": DIMENSIONS,
-    })
+    }
+    return templates.TemplateResponse("assessment.html", context)
 
 
 @router.post("/{user_id}/submit")
@@ -53,11 +54,12 @@ async def submit_assessment(request: Request, user_id: str, db: Session = Depend
     db.commit()
     db.refresh(assessment)
 
-    return templates.TemplateResponse("assessment_result.html", {
+    context = {
         "request": request,
         "user": user,
         "scores": result["scores"],
         "details": result["details"],
         "dimensions": DIMENSIONS,
         "assessment_id": assessment.id,
-    })
+    }
+    return templates.TemplateResponse("assessment_result.html", context)
