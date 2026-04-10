@@ -53,12 +53,10 @@ async def on_shutdown():
 
 @app.get("/", response_class=HTMLResponse)
 def home(request: Request):
+    # Simplified version to avoid Jinja2 issues
     return templates.TemplateResponse(
         "index.html",
-        context={
-            "request": request,
-            "dimensions": DIMENSIONS,
-        }
+        {"request": request, "dimensions": {}}
     )
 
 
