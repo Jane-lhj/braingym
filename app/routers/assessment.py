@@ -1,7 +1,7 @@
 import json
 
 from fastapi import APIRouter, Depends, Request
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 
@@ -9,7 +9,8 @@ from app.config import TEMPLATES_DIR, DIMENSIONS_LIST
 from app.database import get_db
 from app.models import User, Assessment
 from app.services.assessment_service import (
-    get_assessment_questions_smart,
+    get_assessment_questions,
+    generate_assessment_questions_ai,
     score_assessment,
     enrich_question_display,
     enrich_detail_display,
@@ -24,7 +25,7 @@ async def assessment_page(request: Request, user_id: str, db: Session = Depends(
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         return HTMLResponse("用户不存在", status_code=404)
-    raw_questions = await get_assessment_questions_smart()
+    raw_questions = get_assessment_questions()
     questions = [enrich_question_display(q) for q in raw_questions]
     context = {
         "request": request,
@@ -34,6 +35,18 @@ async def assessment_page(request: Request, user_id: str, db: Session = Depends(
         "dimensions_list": DIMENSIONS_LIST,
     }
     return templates.TemplateResponse("assessment.html", context)
+
+
+@router.get("/{user_id}/ai-questions")
+async def assessment_ai_questions(user_id: str, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        return JSONResponse({"questions": []}, status_code=404)
+    raw_questions = await generate_assessment_questions_ai()
+    if not raw_questions:
+        return JSONResponse({"questions": []})
+    questions = [enrich_question_display(q) for q in raw_questions]
+    return JSONResponse({"questions": questions})
 
 
 @router.post("/{user_id}/submit")

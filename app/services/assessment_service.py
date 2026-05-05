@@ -57,6 +57,16 @@ async def get_assessment_questions_smart() -> List[dict]:
     return get_assessment_questions()
 
 
+async def generate_assessment_questions_ai() -> List[dict]:
+    """Generate assessment questions with AI, returning an empty list on failure."""
+    examples = {
+        "critical_thinking": CT_QUESTIONS,
+        "question_framing": QF_QUESTIONS,
+        "creativity": CR_QUESTIONS,
+    }
+    return await generate_assessment_questions(examples)
+
+
 async def score_assessment(answers: dict, questions: List[dict] = None) -> dict:
     """
     Score a complete assessment.

@@ -20,15 +20,16 @@
             <div class="w-full bg-gray-100 rounded-full h-2">
                 <div id="progressBar" class="bg-brain-500 h-2 rounded-full transition-all duration-500" style="width: 0%"></div>
             </div>
+            <div id="aiQuestionStatus" class="mt-3 text-xs text-gray-400">AI 正在补充后续题目，你可以先从当前题开始。</div>
         </div>
 
         <!-- Questions -->
         {% for q in questions %}
         <div class="question-card bg-white rounded-3xl shadow-xl p-6 mb-4 fade-in {% if not loop.first %}hidden{% endif %}"
-             data-index="{{ loop.index0 }}" data-dimension="{{ q.dimension }}">
+             data-index="{{ loop.index0 }}" data-dimension="{{ q.dimension }}" data-question-id="{{ q.id }}">
 
             <!-- Dimension Badge -->
-            <div class="flex flex-wrap items-center gap-2 mb-4">
+            <div class="flex flex-wrap items-center gap-2 mb-4" data-role="badge-row">
                 <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium"
                       style="background: {{ q.dimension_color }}15; color: {{ q.dimension_color }}">
                     {{ q.dimension_icon }} {{ q.dimension_name }}
@@ -42,7 +43,7 @@
             <div class="text-xs text-gray-400 mb-2">第 {{ loop.index }} / {{ questions|length }} 题</div>
 
             <!-- Prompt -->
-            <div class="text-gray-800 font-medium leading-relaxed mb-6 whitespace-pre-line">{{ q.prompt }}</div>
+            <div class="text-gray-800 font-medium leading-relaxed mb-6 whitespace-pre-line" data-role="prompt">{{ q.prompt }}</div>
 
             <div class="mb-3 rounded-xl border border-amber-100 bg-amber-50/80 px-3 py-2 flex items-center justify-between gap-2">
                 <span class="text-xs font-medium text-amber-900/90">⏱️ 节奏</span>
@@ -81,6 +82,12 @@
 
 <script>
 const totalQuestions = {{ questions|length }};
+var assessmentQuestions = {{ questions_payload|safe }};
+var dimensionMeta = {
+    critical_thinking: { name: '批判性思维', icon: '🔍', color: '#EF4444' },
+    question_framing: { name: '提问力', icon: '🎯', color: '#3B82F6' },
+    creativity: { name: '创造力', icon: '💡', color: '#8B5CF6' }
+};
 
 function showQuestion(index) {
     document.querySelectorAll('.question-card').forEach((card, i) => {
@@ -102,7 +109,96 @@ document.querySelectorAll('.answer-input').forEach(el => {
     el.addEventListener('input', updateProgress);
 });
 
+function escapeHtml(value) {
+    return String(value || '').replace(/[&<>"']/g, function(ch) {
+        return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch];
+    });
+}
+
+function difficultyLabel(level) {
+    var n = parseInt(level, 10) || 2;
+    if (n <= 1) return '⭐ 入门';
+    if (n === 2) return '⭐⭐ 进阶';
+    return '⭐⭐⭐ 挑战';
+}
+
+function updateQuestionsPayload() {
+    var payload = document.querySelector('textarea[name="questions_payload"]');
+    if (payload) payload.value = JSON.stringify(assessmentQuestions);
+}
+
+function replaceQuestionCard(card, question) {
+    var textarea = card.querySelector('textarea.answer-input');
+    if (!textarea || textarea.value.trim()) return false;
+
+    var meta = dimensionMeta[question.dimension] || { name: question.dimension_name || '', icon: '', color: '#4f7df9' };
+    var index = parseInt(card.getAttribute('data-index'), 10);
+    var oldId = card.getAttribute('data-question-id');
+    card.setAttribute('data-dimension', question.dimension);
+    card.setAttribute('data-question-id', question.id);
+
+    var badgeRow = card.querySelector('[data-role="badge-row"]');
+    if (badgeRow) {
+        badgeRow.innerHTML =
+            '<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium" ' +
+            'style="background: ' + meta.color + '15; color: ' + meta.color + '">' +
+            escapeHtml(meta.icon + ' ' + (question.dimension_name || meta.name)) +
+            '</span>' +
+            '<span class="text-xs px-2 py-1 rounded-lg bg-gray-100 text-gray-600 font-medium">' +
+            escapeHtml(difficultyLabel(question.difficulty)) +
+            '</span>';
+    }
+
+    var prompt = card.querySelector('[data-role="prompt"]');
+    if (prompt) prompt.textContent = question.prompt || '';
+
+    textarea.name = 'answer_' + question.id;
+    textarea.value = '';
+    if (oldId && assessmentQuestions[index]) {
+        assessmentQuestions[index] = question;
+    }
+    return true;
+}
+
+function applyAiQuestions(questions) {
+    if (!Array.isArray(questions) || questions.length !== totalQuestions) return false;
+    var cards = Array.from(document.querySelectorAll('.question-card'));
+    var replaced = 0;
+    cards.forEach(function(card, index) {
+        if (index === 0) return;
+        if (!card.classList.contains('hidden')) return;
+        if (replaceQuestionCard(card, questions[index])) {
+            replaced += 1;
+        }
+    });
+    if (replaced > 0) {
+        for (var i = 1; i < questions.length; i++) {
+            var text = cards[i].querySelector('textarea.answer-input');
+            if (text && !text.value.trim()) assessmentQuestions[i] = questions[i];
+        }
+        updateQuestionsPayload();
+    }
+    return replaced > 0;
+}
+
+async function warmUpAiAssessmentQuestions() {
+    var status = document.getElementById('aiQuestionStatus');
+    try {
+        var response = await fetch('/assessment/{{ user.id }}/ai-questions');
+        if (!response.ok) throw new Error('AI question request failed');
+        var data = await response.json();
+        if (applyAiQuestions(data.questions)) {
+            if (status) status.textContent = 'AI 已补齐后续题目，当前题不受影响。';
+        } else if (status) {
+            status.textContent = '本地题库已就绪，可以继续完成体测。';
+        }
+    } catch (e) {
+        if (status) status.textContent = '本地题库已就绪，可以继续完成体测。';
+    }
+}
+
 document.getElementById('assessmentForm').addEventListener('submit', function() {
+    updateQuestionsPayload();
     var btn = document.getElementById('submitBtn');
     btn.disabled = true;
     btn.innerHTML = '<span class="inline-flex items-center gap-2"><svg class="animate-spin h-5 w-5" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>评分中...</span>';
@@ -140,5 +236,7 @@ document.getElementById('assessmentForm').addEventListener('submit', function() 
         }
     };
 })();
+
+warmUpAiAssessmentQuestions();
 </script>
 {% endblock %}
