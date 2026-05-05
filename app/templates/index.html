@@ -27,9 +27,23 @@
             </div>
         </div>
 
+        <!-- Mode preview -->
+        <div class="grid grid-cols-2 gap-3 w-full max-w-md mb-6 fade-in">
+            <div class="rounded-2xl bg-white/10 border border-white/15 p-4 text-left text-white">
+                <div class="text-2xl mb-2">🗓️</div>
+                <div class="font-bold">每日闯关</div>
+                <div class="text-xs text-blue-200 mt-1">固定 5 分钟计划</div>
+            </div>
+            <div class="rounded-2xl bg-white/10 border border-white/15 p-4 text-left text-white">
+                <div class="text-2xl mb-2">🏋️</div>
+                <div class="font-bold">自由训练</div>
+                <div class="text-xs text-blue-200 mt-1">按能力专项练</div>
+            </div>
+        </div>
+
         <!-- Login -->
         <div class="glass rounded-3xl p-8 w-full max-w-sm fade-in shadow-2xl">
-            <h2 class="text-lg font-bold text-gray-800 mb-6 text-center">开始训练</h2>
+            <h2 class="text-lg font-bold text-gray-800 mb-6 text-center">选择昵称后开始</h2>
             <form action="/login" method="post" class="space-y-4">
                 <input
                     type="text" name="nickname" required
@@ -47,8 +61,9 @@
     </div>
 
     <!-- Footer -->
-    <div class="text-center py-6 text-blue-400 text-sm">
-        让思考成为习惯，让大脑永远年轻
+    <div class="text-center py-6 text-blue-400 text-sm leading-relaxed">
+        <div>让思考成为习惯，让大脑永远年轻</div>
+        <a href="mailto:hello.lhj@foxmail.com" class="text-blue-300 hover:text-white transition-colors">hello.lhj@foxmail.com</a>
     </div>
 </div>
 {% endblock %}

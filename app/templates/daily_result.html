@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}每日闯关结果 — 健脑房{% endblock %}
+
+{% block body %}
+<div class="px-6 pt-8 pb-16 text-center" style="background: linear-gradient(135deg, {{ dimension_info.color }} 0%, #111827 100%)">
+    <div class="text-5xl mb-3">🏁</div>
+    <p class="text-white/70 text-sm font-medium">今日完成</p>
+    <h1 class="text-2xl font-black text-white mt-1">{{ challenge.completion_title }}</h1>
+    <p class="text-white/75 text-sm mt-2">{{ dimension_info.name }} · {{ challenge.theme }}</p>
+</div>
+
+<div class="px-4 -mt-10 max-w-2xl mx-auto pb-12">
+    <section class="bg-white rounded-3xl shadow-xl p-6 mb-5 fade-in text-center">
+        <div class="inline-flex items-center justify-center w-24 h-24 rounded-full mb-4" style="background: {{ dimension_info.color }}12">
+            <span class="text-4xl">🏅</span>
+        </div>
+        <div class="text-sm text-gray-400 font-semibold">今日称号</div>
+        <h2 class="text-2xl font-black text-gray-900 mt-1">{{ challenge.badge }}</h2>
+        {% if scene %}
+        <div class="inline-flex items-center gap-2 mt-3 px-3 py-1 rounded-full bg-gray-100 text-xs font-semibold text-gray-600">
+            <span>今日场景</span>
+            <span>{{ scene_info.label }}</span>
+        </div>
+        {% endif %}
+        <div class="text-5xl font-black mt-4" style="color: {{ dimension_info.color }}">{{ final_score }}</div>
+        <div class="text-xs text-gray-400 mt-1">综合完成度</div>
+    </section>
+
+    <section class="grid grid-cols-3 gap-3 mb-5 fade-in">
+        {% for stat in challenge.stats %}
+        <div class="bg-white rounded-2xl shadow p-4 text-center border border-gray-100">
+            <div class="text-xs text-gray-500">{{ stat.label }}</div>
+            <div class="text-2xl font-black mt-1" style="color: {{ dimension_info.color }}">+{{ stat.value }}</div>
+        </div>
+        {% endfor %}
+    </section>
+
+    <section class="bg-white rounded-3xl shadow-xl p-6 mb-5 fade-in">
+        <h2 class="text-lg font-bold text-gray-900 mb-3">一句复盘</h2>
+        <p class="text-gray-700 leading-relaxed bg-gray-50 rounded-2xl p-4">{{ challenge.recap }}</p>
+    </section>
+
+    <section class="bg-white rounded-3xl shadow-xl p-6 mb-5 fade-in">
+        <h2 class="text-lg font-bold text-gray-900 mb-4">三站回看</h2>
+        <div class="space-y-3">
+            {% for result in station_results %}
+            <div class="rounded-2xl border border-gray-100 p-4">
+                <div class="flex items-center justify-between gap-3 mb-2">
+                    <h3 class="font-bold text-gray-800">{{ result.name }}</h3>
+                    <span class="text-sm font-black" style="color: {{ dimension_info.color }}">{{ result.score }}分</span>
+                </div>
+                <p class="text-sm text-gray-600 leading-relaxed whitespace-pre-line bg-gray-50 rounded-xl p-3">{{ result.feedback }}</p>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+
+    <div class="flex gap-3 fade-in">
+        <a href="/dashboard/{{ user.id }}"
+           class="flex-1 py-3 text-white rounded-xl font-semibold text-center transition-colors shadow-lg"
+           style="background: {{ dimension_info.color }}; box-shadow: 0 10px 25px {{ dimension_info.color }}40">
+            回到健脑房
+        </a>
+        <a href="/training/{{ user.id }}"
+           class="flex-1 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-semibold text-center transition-colors">
+            去自由训练
+        </a>
+    </div>
+</div>
+{% endblock %}

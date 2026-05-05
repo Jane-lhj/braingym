@@ -184,6 +184,7 @@ async def submit_exercise(
 
     form = await request.form()
     question_id = str(form.get("question_id", ""))
+    question_payload = str(form.get("question_payload", ""))
     user_answer = str(form.get("user_answer", ""))
     scene = str(form.get("scene", ""))
     try:
@@ -194,7 +195,7 @@ async def submit_exercise(
     max_u = max_unlocked_level(db, user_id, dimension, exercise_type)
     training_level = clamp_level(training_level, max_u)
 
-    result = await score_exercise(dimension, exercise_type, question_id, user_answer)
+    result = await score_exercise(dimension, exercise_type, question_id, user_answer, question_payload)
 
     record = TrainingRecord(
         user_id=user_id,

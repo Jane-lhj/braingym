@@ -16,6 +16,7 @@ STATIC_DIR = Path(__file__).resolve().parent / "static"
 LLM_API_KEY = os.getenv("LLM_API_KEY", "")
 LLM_BASE_URL = os.getenv("LLM_BASE_URL", "https://api.deepseek.com")
 LLM_MODEL = os.getenv("LLM_MODEL", "deepseek-chat")
+USE_LLM = os.getenv("USE_LLM", "true").lower() in {"1", "true", "yes", "on"}
 
 SCENE_PRESETS = [
     {"key": "daily", "name": "生活日常", "icon": "🏠", "hint": "用日常消费、社交、家庭、出行等生活场景出题"},

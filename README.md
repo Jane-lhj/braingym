@@ -1,6 +1,6 @@
 # 健脑房 BrainGym
 
-面向「开放式训练 + 体测」的认知能力练习 Web 应用：批判性思维、提问力、创造力等维度；支持 DeepSeek / OpenAI 兼容 API 的 AI 出题与点评。
+面向「每日闯关 + 自由训练 + 体测」的认知能力练习 Web 应用：批判性思维、提问力、创造力等维度。默认使用 DeepSeek / OpenAI 兼容 API 做 AI 出题、AI 追问、AI 评分；本地题库保留为出题示例和无 key 时兜底。
 
 ## 评委 / 使用者如何运行
 
@@ -15,7 +15,7 @@ python3 -m venv .venv
 source .venv/bin/activate   # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 cp .env.example .env
-# 编辑 .env，填入 LLM_API_KEY（无 key 时部分 AI 能力不可用，其余页面仍可浏览）
+# 填写 LLM_API_KEY
 ```
 
 3. 启动服务：
@@ -47,23 +47,24 @@ python scripts/check_llm.py
 
 ## 公网部署（让别人打开链接就能用）
 
-思路：**把代码放到 Git 仓库** → 在云平台用 **Docker** 构建并运行 → 绑定平台分配的 **HTTPS 域名** → 在控制台填入 **环境变量**（尤其 `LLM_API_KEY`）。本仓库的 `Dockerfile` 已监听 `0.0.0.0` 和 `PORT`，并暴露 `GET /health` 给健康检查。
+思路：**把代码放到 Git 仓库** → 在云平台用 **Docker** 构建并运行 → 绑定平台分配的 **HTTPS 域名** → 配置 AI key。本仓库的 `Dockerfile` 已监听 `0.0.0.0` 和 `PORT`，并暴露 `GET /health` 给健康检查。
 
 ### 方案一：Render（步骤最少，海外访问）
 
 1. 把项目推到 **GitHub**（不要提交 `.env`、`braingym.db`）。
 2. 打开 [Render Dashboard](https://dashboard.render.com/)，登录后 **New → Blueprint**，选中该仓库；若提示使用 `render.yaml`，按引导创建即可。
-3. 在界面里为 **`LLM_API_KEY`** 填入你的 DeepSeek（或兼容 OpenAI）的 Key（Blueprint 里该项为 `sync: false`，需在 Dashboard 补全）。
+3. 在界面里为 **`LLM_API_KEY`** 填入你的 DeepSeek（或兼容 OpenAI）的 Key。
 4. 部署完成后，打开形如 `https://braingym.onrender.com` 的地址即可访问。
+5. 用户有问题可直接邮件联系：`hello.lhj@foxmail.com`。
 
-**持久化数据库（推荐正式演示用）**  
-Render 的**持久盘仅支持付费 Web 实例**。本仓库的 `render.yaml` 已配置：磁盘挂到 `/app/data`，`DATABASE_URL=sqlite:////app/data/braingym.db`。若你只用**免费实例**，请删掉 `render.yaml` 里的 `disk` 段和 `DATABASE_URL` 环境变量，接受「重新部署后 SQLite 可能清空」；短期评委演示通常可接受。
+**数据说明**
+站内不再收集反馈，也没有反馈后台。Render 免费实例可以直接跑；只是本地 SQLite 里的用户记录、训练记录可能在重新部署或休眠重启后清空。如果后续需要长期保存训练数据，再接持久盘或外部数据库。
 
 **不用 Blueprint、纯手点创建**  
 
 - **New → Web Service**，连接同一 GitHub 仓库。  
 - **Runtime** 选 **Docker**（使用根目录 `Dockerfile`）。  
-- **Environment**：添加 `LLM_API_KEY`、`LLM_BASE_URL`、`LLM_MODEL`（与 `.env.example` 一致）。需要持久库时再加磁盘挂载 `/app/data`，并增加 `DATABASE_URL=sqlite:////app/data/braingym.db`。  
+- **Environment**：添加 `USE_LLM=true`、`LLM_API_KEY`、`LLM_BASE_URL`、`LLM_MODEL`。
 - **Health Check Path** 填 `/health`。
 
 ### 方案二：Fly.io / Railway / 其他
@@ -92,8 +93,9 @@ docker compose up -d --build
 | 项 | 说明 |
 |----|------|
 | `PORT` | 平台一般会自动注入；本地 Docker 默认 8000 |
-| `LLM_API_KEY` | 在平台「环境变量」里配置，不要写进仓库 |
-| 数据库 | 正式环境务必持久卷 + `DATABASE_URL` 与挂载路径一致 |
+| `USE_LLM` | 默认 `true`；设为 `false` 时才退回本地兜底 |
+| `LLM_API_KEY` | AI 出题、追问、评分需要配置 |
+| 联系方式 | 页面只展示 `hello.lhj@foxmail.com`，不收集站内反馈 |
 | 健康检查 | `GET /health` 返回 `{"status":"ok"}` |
 
 ## 项目结构（方便你后续改）
@@ -104,12 +106,19 @@ docker compose up -d --build
 | `app/config.py` | 环境变量、维度/关卡/场景等配置 |
 | `app/database.py` | SQLAlchemy、`init_db`、SQLite 迁移 |
 | `app/models.py` | 数据模型 |
-| `app/routers/` | 用户、引导、体测、训练路由 |
-| `app/services/` | AI 调用、训练/体测业务逻辑 |
+| `app/routers/` | 用户、引导、体测、每日闯关、自由训练路由 |
+| `app/services/` | AI 出题/追问/评分、本地兜底、训练/体测业务逻辑 |
 | `app/templates/` | Jinja2 页面 |
 | `app/static/` | CSS 等静态文件 |
+| `app/content/daily_challenges.py` | 每日闯关固定内容 |
 | `app/question_bank/` | 题库文本 |
 | `scripts/check_llm.py` | 连通性自检 |
+
+## 双语维护约定
+
+页面默认中文。右上角 `English / 中文` 按钮使用本地词典即时切换，不调用 AI 翻译接口。
+
+后续只要改动中文页面文案、配置项名称、维度说明、名词提示或题库题干，请同步更新 `app/static/js/translate.js` 里的英文映射；未收录的中文会保持中文显示。
 
 ## 技术栈
 

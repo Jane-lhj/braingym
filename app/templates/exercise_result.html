@@ -50,23 +50,10 @@
         <div class="text-gray-600 leading-relaxed bg-gray-50 rounded-2xl p-4 whitespace-pre-line">{{ user_answer }}</div>
 
         {% if result.get('ai_answer') %}
-        <h3 class="font-bold text-gray-800 mt-6 mb-3">🤖 AI 参考答案</h3>
+        <h3 class="font-bold text-gray-800 mt-6 mb-3">参考答案</h3>
         <div class="text-gray-700 leading-relaxed bg-green-50 rounded-2xl p-4 border border-green-100 whitespace-pre-line">{{ result.ai_answer }}</div>
         {% endif %}
     </div>
-
-
-    {% if glossary %}
-    <details class="bg-white rounded-3xl shadow-xl p-6 mb-6 fade-in text-sm text-gray-700">
-        <summary class="cursor-pointer font-bold text-gray-800 select-none">📖 这些题在考什么？（再瞄一眼名词）</summary>
-        <ul class="mt-3 space-y-2">
-            {% for term in glossary %}
-            <li><span class="font-medium text-gray-900">{{ term.title }}</span> — {{ term.one_liner }}</li>
-            {% endfor %}
-        </ul>
-        <a href="/guide/{{ user.id }}#{{ dimension }}" class="inline-block mt-3 text-xs font-medium" style="color: {{ dimension_info.color }}">打开 {{ dimension_info.name }} 能力说明 →</a>
-    </details>
-    {% endif %}
 
     <!-- Actions -->
     <div class="flex gap-3 fade-in">

@@ -6,7 +6,7 @@ from fastapi.templating import Jinja2Templates
 from app.config import TEMPLATES_DIR, STATIC_DIR, DIMENSIONS, DIMENSIONS_LIST
 from app.database import init_db, get_db
 from app.models import User
-from app.routers import user, assessment, training, guide
+from app.routers import user, assessment, training, guide, daily
 from app.services import ai_service
 
 app = FastAPI(title="健脑房 BrainGym")
@@ -23,6 +23,7 @@ app.include_router(user.router)
 app.include_router(guide.router)
 app.include_router(assessment.router)
 app.include_router(training.router)
+app.include_router(daily.router)
 
 
 @app.get("/classroom/{user_id}")

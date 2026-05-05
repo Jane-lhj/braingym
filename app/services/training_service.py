@@ -21,9 +21,9 @@ DIMENSION_EXERCISES = {
     "creativity": CR_EXERCISES,
 }
 
-# In-memory: AI-generated questions by id (for scoring)
+# In-memory: generated questions by id. Local question banks are examples/fallbacks.
 _ai_question_cache: dict = {}
-# Reuse recent AI questions per (dimension, exercise, scene, difficulty) to cut latency
+# Reuse recent generated questions per (dimension, exercise, scene, difficulty)
 _AI_POOLS: dict = defaultdict(list)
 _POOL_MAX = 8
 
@@ -106,7 +106,7 @@ async def get_exercise_question_smart(
     difficulty: Optional[int] = None,
     scene_hint: str = "",
 ) -> Optional[dict]:
-    """Pool-first, AI pool reuse, then AI generate. Force AI path when scene_hint is set."""
+    """Generate an AI question first; use local question banks only as fallback examples."""
     exercises = DIMENSION_EXERCISES.get(dimension, {})
     exercise = exercises.get(exercise_type)
     if not exercise:
@@ -114,11 +114,6 @@ async def get_exercise_question_smart(
 
     tier = difficulty if difficulty is not None else 1
     key = _pool_key(dimension, exercise_type, scene_hint, tier)
-
-    if not scene_hint:
-        q = get_exercise_question_sync(dimension, exercise_type, done_ids, difficulty)
-        if q is not None:
-            return q
 
     cached = _pool_take(key, done_ids)
     if cached:
@@ -137,7 +132,22 @@ async def get_exercise_question_smart(
         _pool_push(key, ai_q)
         return ai_q
 
-    return random.choice(exercise["questions"]) if exercise["questions"] else None
+    return get_exercise_question_sync(dimension, exercise_type, done_ids, difficulty)
+
+
+def _question_from_payload(question_payload: str) -> Optional[dict]:
+    if not question_payload:
+        return None
+    try:
+        import json
+
+        q = json.loads(question_payload)
+    except Exception:
+        return None
+    if not isinstance(q, dict) or not q.get("id"):
+        return None
+    _ai_question_cache[q["id"]] = q
+    return q
 
 
 async def score_exercise(
@@ -145,15 +155,16 @@ async def score_exercise(
     exercise_type: str,
     question_id: str,
     user_answer: str,
+    question_payload: str = "",
 ) -> dict:
-    """Score a training exercise and generate an AI reference answer."""
+    """Score a training exercise and attach a reference answer when available."""
     if not (user_answer or "").strip():
         return empty_answer_result()
 
     exercises = DIMENSION_EXERCISES.get(dimension, {})
     exercise = exercises.get(exercise_type)
 
-    q = None
+    q = _question_from_payload(question_payload)
     if exercise:
         for question in exercise["questions"]:
             if question["id"] == question_id:

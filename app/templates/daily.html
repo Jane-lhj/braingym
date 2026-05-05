@@ -1,0 +1,471 @@
+{% extends "base.html" %}
+{% block title %}每日闯关 — 健脑房{% endblock %}
+
+{% block body %}
+<div class="px-6 pt-8 pb-16 text-center" style="background: linear-gradient(135deg, {{ dimension_info.color }} 0%, #111827 100%)">
+    <div class="text-4xl mb-2">🗓️</div>
+    <p class="text-white/70 text-sm font-medium">每日闯关</p>
+    <h1 class="text-2xl font-black text-white mt-1">今日主题：{{ challenge.theme }}</h1>
+    <p class="text-white/75 text-sm mt-2 max-w-md mx-auto leading-relaxed">{{ challenge.subtitle }}</p>
+    <div class="mt-4 flex flex-wrap justify-center gap-2 text-sm">
+        <a href="/dashboard/{{ user.id }}" class="px-4 py-2 rounded-xl bg-white/15 text-white hover:bg-white/25 transition-colors">← 我的健脑房</a>
+        <a href="/training/{{ user.id }}" class="px-4 py-2 rounded-xl bg-white/10 text-white/90 hover:bg-white/20 transition-colors">自由训练</a>
+    </div>
+</div>
+
+<div class="px-4 -mt-10 max-w-2xl mx-auto pb-12">
+    {% set quick = challenge.stations[0] %}
+    {% set debate = challenge.stations[1] %}
+    {% set reality = challenge.stations[2] %}
+
+    <div class="bg-white rounded-3xl shadow-xl p-5 mb-5 fade-in">
+        <div class="flex items-start gap-3">
+            <div class="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl" style="background: {{ dimension_info.color }}12">
+                {{ dimension_info.icon }}
+            </div>
+            <div class="flex-1 min-w-0">
+                <h2 class="text-lg font-bold text-gray-900">今天固定 5 分钟计划</h2>
+                <p class="text-sm text-gray-500 mt-1">{{ dimension_info.name }} · 三站式脑力循环</p>
+            </div>
+        </div>
+        <p class="text-sm text-gray-500 mt-4 leading-relaxed">先完成快答，再进入限时辩论，最后落到现实任务。</p>
+        <div class="grid grid-cols-3 gap-2 mt-4 text-center">
+            {% for station in challenge.stations %}
+            <div data-step-pill="{{ station.key }}" class="rounded-2xl bg-gray-50 border border-gray-100 px-2 py-3 transition-all">
+                <div class="text-xs text-gray-400">第 {{ loop.index }} 站</div>
+                <div class="text-sm font-bold text-gray-800 mt-1">{{ station.name }}</div>
+                <div class="text-xs mt-1" style="color: {{ dimension_info.color }}">{{ station.time_hint }}</div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    {% if scene %}
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 mb-4 fade-in">
+        <div class="text-xs font-semibold text-gray-400">今日场景</div>
+        <div class="flex flex-wrap items-center gap-2 mt-2">
+            <span class="text-sm text-gray-600">已选择场景</span>
+            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold" style="background: {{ dimension_info.color }}12; color: {{ dimension_info.color }}">
+                {% set ns = namespace(found=false, icon='') %}
+                {% for p in scene_presets %}
+                    {% if p.key == scene %}
+                        {% set ns.found = true %}
+                        {% set ns.icon = p.icon %}
+                    {% endif %}
+                {% endfor %}
+                {% if ns.icon %}<span>{{ ns.icon }}</span>{% endif %}
+                <span>{{ scene_info.label }}</span>
+            </span>
+        </div>
+        <p class="text-sm text-gray-500 mt-2 leading-relaxed">结合这个场景完成今天的三站练习。</p>
+    </div>
+    {% endif %}
+
+    <details class="mb-4 rounded-2xl border border-gray-100 bg-white shadow-sm overflow-hidden group">
+        <summary class="list-none cursor-pointer px-4 py-2.5 flex items-center justify-between text-sm font-medium text-gray-800 hover:bg-gray-50/80">
+            <span>{% if scene %}换场景{% else %}场景（可选）{% endif %}</span>
+            <span class="text-gray-400 text-xs group-open:rotate-180 transition-transform">▼</span>
+        </summary>
+        <div class="px-3 pb-3 border-t border-gray-50">
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-3">
+                {% for p in scene_presets %}
+                <a href="/daily/{{ user.id }}?scene={{ p.key }}"
+                   class="flex flex-col items-center justify-center py-2.5 rounded-xl border border-gray-100 hover:border-gray-200 hover:bg-gray-50/80 transition-all text-center {% if scene == p.key %}ring-2{% endif %}"
+                   {% if scene == p.key %}style="--tw-ring-color: {{ dimension_info.color }}; background: {{ dimension_info.color }}08"{% endif %}>
+                    <span class="text-xl leading-none">{{ p.icon }}</span>
+                    <span class="text-xs font-medium text-gray-800 mt-1">{{ p.name }}</span>
+                </a>
+                {% endfor %}
+            </div>
+            <div class="flex gap-2 mt-3">
+                <input id="dailyCustomSceneInput" type="text" placeholder="自定义一句，如：动漫剧情"
+                       class="flex-1 min-w-0 px-3 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:border-transparent"
+                       style="--tw-ring-color: {{ dimension_info.color }}"
+                       value="{{ scene if scene and scene not in ['daily','work','trending','academic'] else '' }}">
+                <button type="button" onclick="applyDailyCustomScene()"
+                        class="px-3 py-2 rounded-xl text-white text-sm font-semibold shrink-0"
+                        style="background: {{ dimension_info.color }}">
+                    应用
+                </button>
+            </div>
+            {% if scene %}
+            <a href="/daily/{{ user.id }}"
+               class="block mt-2 text-center text-xs text-gray-500 hover:text-gray-700 py-1">
+                不选场景，用默认题
+            </a>
+            {% endif %}
+        </div>
+    </details>
+
+    <form id="dailyChallengeForm" action="/daily/{{ user.id }}/submit" method="post" class="space-y-4">
+        <input type="hidden" name="challenge_id" value="{{ challenge.id }}">
+        <input type="hidden" name="scene" value="{{ scene or '' }}">
+        <input type="hidden" id="debateTurnCount" name="debate_turn_count" value="0">
+        <textarea name="challenge_payload" class="hidden">{{ challenge_payload }}</textarea>
+        <textarea id="debateAnswerField" name="debate_answer" class="hidden"></textarea>
+
+        <section id="stepQuick" data-step-panel="quick" class="bg-white rounded-3xl shadow-xl p-6 fade-in border border-gray-100">
+            <div class="flex items-center justify-between gap-3 mb-3">
+                <div>
+                    <div class="text-xs font-semibold text-gray-400">第 1 站</div>
+                    <h2 class="text-lg font-black text-gray-900">{{ quick.name }}</h2>
+                </div>
+                <span class="px-3 py-1 rounded-full text-xs font-semibold" style="background: {{ dimension_info.color }}12; color: {{ dimension_info.color }}">
+                    {{ quick.time_hint }}
+                </span>
+            </div>
+            <div class="text-gray-800 leading-relaxed whitespace-pre-line mb-4">{{ quick.prompt }}</div>
+            <textarea
+                id="quickAnswerField"
+                name="quick_answer"
+                rows="5"
+                class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:border-transparent resize-none text-gray-800 leading-relaxed"
+                style="--tw-ring-color: {{ dimension_info.color }}"
+            ></textarea>
+            <div class="mt-3">
+                <button type="button" onclick="toggleHint('quickHint', this)" class="text-sm font-semibold text-gray-500 hover:text-gray-700">看提示</button>
+                <div id="quickHint" class="hidden mt-2 rounded-2xl bg-gray-50 border border-gray-100 p-3 text-sm text-gray-600 leading-relaxed">
+                    <div class="text-xs font-semibold text-gray-400 mb-1">提示</div>
+                    {{ quick.placeholder }}
+                </div>
+            </div>
+            <p id="quickNotice" class="hidden mt-2 text-sm text-red-500">请先写下你的快答。</p>
+            <button
+                type="button"
+                onclick="completeQuickStep()"
+                class="w-full mt-5 py-3 text-white rounded-xl font-semibold transition-colors shadow-lg"
+                style="background: {{ dimension_info.color }}; box-shadow: 0 10px 25px {{ dimension_info.color }}35"
+            >
+                完成快答，进入辩论
+            </button>
+        </section>
+
+        <section id="stepDebate" data-step-panel="debate" class="hidden bg-white rounded-3xl shadow-xl p-6 fade-in border border-gray-100">
+            <div class="flex items-center justify-between gap-3 mb-3">
+                <div>
+                    <div class="text-xs font-semibold text-gray-400">第 2 站</div>
+                    <h2 class="text-lg font-black text-gray-900">限时辩论</h2>
+                </div>
+                <span class="px-3 py-1 rounded-full text-xs font-semibold" style="background: {{ dimension_info.color }}12; color: {{ dimension_info.color }}">
+                    剩余时间 <span id="debateTimer">02:00</span>
+                </span>
+            </div>
+            <div id="debateLog" class="space-y-3 mb-4">
+                <div class="rounded-2xl bg-gray-50 border border-gray-100 p-4">
+                    <div class="text-xs font-semibold text-gray-400 mb-1">对方观点</div>
+                    <div id="debateInitialText" class="text-gray-800 leading-relaxed whitespace-pre-line">{{ debate.prompt }}</div>
+                </div>
+            </div>
+            <div class="relative">
+                <textarea
+                    id="debateDraft"
+                    rows="5"
+                    class="w-full px-4 py-3 pb-16 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:border-transparent resize-none text-gray-800 leading-relaxed"
+                    style="--tw-ring-color: {{ dimension_info.color }}"
+                ></textarea>
+                <button
+                    id="debateSendBtn"
+                    type="button"
+                    onclick="sendDebateTurn()"
+                    class="absolute right-3 bottom-3 px-4 py-2 rounded-xl font-semibold text-white text-sm transition-colors"
+                    style="background: {{ dimension_info.color }}"
+                >
+                    发送回应
+                </button>
+            </div>
+            <div class="mt-3">
+                <button type="button" onclick="toggleHint('debateHint', this)" class="text-sm font-semibold text-gray-500 hover:text-gray-700">看提示</button>
+                <div id="debateHint" class="hidden mt-2 rounded-2xl bg-gray-50 border border-gray-100 p-3 text-sm text-gray-600 leading-relaxed">
+                    <div class="text-xs font-semibold text-gray-400 mb-1">提示</div>
+                    {{ debate.placeholder }}
+                </div>
+            </div>
+            <p id="debateNotice" class="hidden mt-2 text-sm text-red-500">请先写一句回应。</p>
+            <p id="debateStatus" class="mt-2 text-sm text-gray-500"></p>
+            <div class="flex gap-3 mt-5">
+                <button
+                    id="finishDebateBtn"
+                    type="button"
+                    onclick="finishDebateStep()"
+                    class="hidden flex-1 py-3 rounded-xl font-semibold bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors"
+                >
+                    进入现实任务卡
+                </button>
+            </div>
+        </section>
+
+        <section id="stepReality" data-step-panel="reality" class="hidden bg-white rounded-3xl shadow-xl p-6 fade-in border border-gray-100">
+            <div class="flex items-center justify-between gap-3 mb-3">
+                <div>
+                    <div class="text-xs font-semibold text-gray-400">第 3 站</div>
+                    <h2 class="text-lg font-black text-gray-900">{{ reality.name }}</h2>
+                </div>
+                <span class="px-3 py-1 rounded-full text-xs font-semibold" style="background: {{ dimension_info.color }}12; color: {{ dimension_info.color }}">
+                    {{ reality.time_hint }}
+                </span>
+            </div>
+            <div class="text-gray-800 leading-relaxed whitespace-pre-line mb-4">{{ reality.prompt }}</div>
+            <textarea
+                id="realityAnswerField"
+                name="reality_answer"
+                rows="5"
+                class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:border-transparent resize-none text-gray-800 leading-relaxed"
+                style="--tw-ring-color: {{ dimension_info.color }}"
+            ></textarea>
+            <div class="mt-3">
+                <button type="button" onclick="toggleHint('realityHint', this)" class="text-sm font-semibold text-gray-500 hover:text-gray-700">看提示</button>
+                <div id="realityHint" class="hidden mt-2 rounded-2xl bg-gray-50 border border-gray-100 p-3 text-sm text-gray-600 leading-relaxed">
+                    <div class="text-xs font-semibold text-gray-400 mb-1">提示</div>
+                    {{ reality.placeholder }}
+                </div>
+            </div>
+            <p id="realityNotice" class="hidden mt-2 text-sm text-red-500">请先写下今天的小任务。</p>
+            <button
+                id="dailySubmitBtn"
+                type="submit"
+                class="w-full mt-5 py-3.5 text-white rounded-xl font-semibold text-lg transition-colors shadow-lg"
+                style="background: {{ dimension_info.color }}; box-shadow: 0 10px 25px {{ dimension_info.color }}40"
+            >
+                完成今日闯关
+            </button>
+        </section>
+    </form>
+</div>
+<script>
+var dailyAccentColor = '{{ dimension_info.color }}';
+var dailyChallengeId = '{{ challenge.id }}';
+var debateReplyUrl = '/daily/{{ user.id }}/debate-reply';
+var debateSecondsLeft = {{ debate_seconds|int }};
+var debateTimerStarted = false;
+var debateTimerHandle = null;
+var debateTurns = [];
+
+function applyDailyCustomScene() {
+    var input = document.getElementById('dailyCustomSceneInput');
+    if (!input) return;
+    var value = input.value.trim();
+    if (!value) return;
+    window.location.href = '/daily/{{ user.id }}?scene=' + encodeURIComponent(value);
+}
+
+function toggleHint(id, button) {
+    var hint = document.getElementById(id);
+    if (!hint) return;
+    var willShow = hint.classList.contains('hidden');
+    hint.classList.toggle('hidden', !willShow);
+    if (button) {
+        button.textContent = willShow ? '收起提示' : '看提示';
+    }
+}
+
+function setDailyStep(step) {
+    document.querySelectorAll('[data-step-panel]').forEach(function(panel) {
+        panel.classList.toggle('hidden', panel.getAttribute('data-step-panel') !== step);
+    });
+    updateDailyPills(step);
+    var form = document.getElementById('dailyChallengeForm');
+    if (form) {
+        window.setTimeout(function() {
+            form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 40);
+    }
+}
+
+function updateDailyPills(activeStep) {
+    var order = ['quick', 'debate', 'reality'];
+    var activeIndex = order.indexOf(activeStep);
+    document.querySelectorAll('[data-step-pill]').forEach(function(pill) {
+        var step = pill.getAttribute('data-step-pill');
+        var index = order.indexOf(step);
+        pill.style.borderColor = '#f3f4f6';
+        pill.style.background = '#f9fafb';
+        pill.style.boxShadow = 'none';
+        pill.querySelectorAll('div').forEach(function(child) {
+            child.style.color = '';
+        });
+        if (index === activeIndex) {
+            pill.style.borderColor = dailyAccentColor;
+            pill.style.background = dailyAccentColor;
+            pill.style.boxShadow = '0 10px 24px ' + dailyAccentColor + '33';
+            pill.querySelectorAll('div').forEach(function(child) {
+                child.style.color = '#fff';
+            });
+        } else if (index < activeIndex) {
+            pill.style.borderColor = dailyAccentColor + '33';
+            pill.style.background = dailyAccentColor + '12';
+        }
+    });
+}
+
+function completeQuickStep() {
+    var field = document.getElementById('quickAnswerField');
+    var notice = document.getElementById('quickNotice');
+    if (!field.value.trim()) {
+        notice.classList.remove('hidden');
+        field.focus();
+        return;
+    }
+    notice.classList.add('hidden');
+    setDailyStep('debate');
+    startDebateTimer();
+    syncDebateTranscript();
+}
+
+function formatDebateTime(total) {
+    var minutes = Math.floor(total / 60);
+    var seconds = total % 60;
+    return (minutes < 10 ? '0' : '') + minutes + ':' + (seconds < 10 ? '0' : '') + seconds;
+}
+
+function startDebateTimer() {
+    if (debateTimerStarted) return;
+    debateTimerStarted = true;
+    var timer = document.getElementById('debateTimer');
+    var tick = function() {
+        timer.textContent = formatDebateTime(debateSecondsLeft);
+        if (debateSecondsLeft <= 0) {
+            document.getElementById('debateStatus').textContent = '辩论时间到，可以进入任务卡。';
+            document.getElementById('debateDraft').disabled = true;
+            document.getElementById('debateSendBtn').disabled = true;
+            document.getElementById('debateSendBtn').classList.add('opacity-60');
+            document.getElementById('finishDebateBtn').classList.remove('hidden');
+            return;
+        }
+        debateSecondsLeft -= 1;
+        debateTimerHandle = window.setTimeout(tick, 1000);
+    };
+    tick();
+}
+
+function appendDebateBubble(label, text, mine) {
+    var log = document.getElementById('debateLog');
+    var wrapper = document.createElement('div');
+    wrapper.className = mine
+        ? 'rounded-2xl p-4 text-white ml-8'
+        : 'rounded-2xl bg-gray-50 border border-gray-100 p-4 mr-8';
+    if (mine) {
+        wrapper.style.background = dailyAccentColor;
+    }
+    var labelEl = document.createElement('div');
+    labelEl.className = mine ? 'text-xs font-semibold text-white/70 mb-1' : 'text-xs font-semibold text-gray-400 mb-1';
+    labelEl.textContent = label;
+    var textEl = document.createElement('div');
+    textEl.className = mine ? 'leading-relaxed whitespace-pre-line' : 'text-gray-800 leading-relaxed whitespace-pre-line';
+    textEl.textContent = text;
+    wrapper.appendChild(labelEl);
+    wrapper.appendChild(textEl);
+    log.appendChild(wrapper);
+    wrapper.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function syncDebateTranscript() {
+    var initial = document.getElementById('debateInitialText').textContent.trim();
+    var transcript = ['对方观点：' + initial].concat(debateTurns).join('\n\n');
+    document.getElementById('debateAnswerField').value = transcript;
+    document.getElementById('debateTurnCount').value = String(debateTurns.filter(function(turn) {
+        return turn.indexOf('我：') === 0;
+    }).length);
+}
+
+async function requestDebateReply(message) {
+    var transcript = document.getElementById('debateAnswerField').value || '';
+    var form = new URLSearchParams();
+    form.set('challenge_id', dailyChallengeId);
+    form.set('message', message);
+    form.set('transcript', transcript);
+    var response = await fetch(debateReplyUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
+        body: form.toString()
+    });
+    if (!response.ok) {
+        throw new Error('debate reply failed');
+    }
+    return response.json();
+}
+
+async function sendDebateTurn() {
+    var draft = document.getElementById('debateDraft');
+    var notice = document.getElementById('debateNotice');
+    var status = document.getElementById('debateStatus');
+    var sendBtn = document.getElementById('debateSendBtn');
+    var value = draft.value.trim();
+    if (!value) {
+        notice.classList.remove('hidden');
+        draft.focus();
+        return;
+    }
+    notice.classList.add('hidden');
+    appendDebateBubble('你的回应', value, true);
+    debateTurns.push('我：' + value);
+    draft.value = '';
+    document.getElementById('finishDebateBtn').classList.remove('hidden');
+    syncDebateTranscript();
+    status.textContent = '正在准备追问…';
+    sendBtn.disabled = true;
+    sendBtn.classList.add('opacity-60');
+
+    try {
+        var data = await requestDebateReply(value);
+        var reply = (data && data.reply) ? String(data.reply).trim() : '';
+        if (reply) {
+            var label = '追问';
+            appendDebateBubble(label, reply, false);
+            debateTurns.push(label + '：' + reply);
+            status.textContent = '追问已准备好，可以继续回应，或进入现实任务卡。';
+        } else {
+            status.textContent = '追问暂时没准备好，先继续写你的反驳也可以。';
+        }
+    } catch (e) {
+        var fallback = '你这句话最强的一点是什么？能把它压成一个追问吗？';
+        appendDebateBubble('追问', fallback, false);
+        debateTurns.push('追问：' + fallback);
+        status.textContent = '追问已准备好，可以继续回应，或进入现实任务卡。';
+    } finally {
+        syncDebateTranscript();
+        if (debateSecondsLeft > 0) {
+            sendBtn.disabled = false;
+            sendBtn.classList.remove('opacity-60');
+        }
+    }
+}
+
+function finishDebateStep() {
+    var userTurnCount = debateTurns.filter(function(turn) {
+        return turn.indexOf('我：') === 0;
+    }).length;
+    if (userTurnCount === 0 && debateSecondsLeft > 0) {
+        document.getElementById('debateNotice').classList.remove('hidden');
+        document.getElementById('debateDraft').focus();
+        return;
+    }
+    window.clearTimeout(debateTimerHandle);
+    syncDebateTranscript();
+    setDailyStep('reality');
+}
+
+document.getElementById('dailyCustomSceneInput').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        applyDailyCustomScene();
+    }
+});
+
+document.getElementById('dailyChallengeForm').addEventListener('submit', function(e) {
+    var reality = document.getElementById('realityAnswerField');
+    var notice = document.getElementById('realityNotice');
+    if (!reality.value.trim()) {
+        e.preventDefault();
+        notice.classList.remove('hidden');
+        reality.focus();
+        return;
+    }
+    syncDebateTranscript();
+    var btn = document.getElementById('dailySubmitBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="inline-flex items-center gap-2"><svg class="animate-spin h-5 w-5" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>评分中...</span>';
+});
+
+updateDailyPills('quick');
+</script>
+{% endblock %}

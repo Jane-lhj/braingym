@@ -1,5 +1,6 @@
 """Assessment (体测) business logic."""
 
+import asyncio
 import random
 from typing import List, Dict
 
@@ -7,7 +8,7 @@ from app.question_bank.critical_thinking import ASSESSMENT_QUESTIONS as CT_QUEST
 from app.question_bank.question_framing import ASSESSMENT_QUESTIONS as QF_QUESTIONS
 from app.question_bank.creativity import ASSESSMENT_QUESTIONS as CR_QUESTIONS
 from app.config import DIMENSIONS
-from app.services.ai_service import score_open_ended
+from app.services.ai_service import generate_assessment_questions, score_open_ended
 
 
 def enrich_question_display(q: dict) -> dict:
@@ -30,7 +31,7 @@ def enrich_detail_display(d: dict) -> dict:
 
 
 def get_assessment_questions(shuffle: bool = True) -> List[dict]:
-    """Return all 9 assessment questions; order shuffled each load for variety."""
+    """Return local assessment examples/fallback questions."""
     questions = []
     for q in CT_QUESTIONS:
         questions.append({**q, "dimension": "critical_thinking", "dimension_name": "批判性思维"})
@@ -43,13 +44,26 @@ def get_assessment_questions(shuffle: bool = True) -> List[dict]:
     return questions
 
 
-async def score_assessment(answers: dict) -> dict:
+async def get_assessment_questions_smart() -> List[dict]:
+    """Generate assessment questions with AI; local bank is fallback only."""
+    examples = {
+        "critical_thinking": CT_QUESTIONS,
+        "question_framing": QF_QUESTIONS,
+        "creativity": CR_QUESTIONS,
+    }
+    ai_questions = await generate_assessment_questions(examples)
+    if ai_questions:
+        return ai_questions
+    return get_assessment_questions()
+
+
+async def score_assessment(answers: dict, questions: List[dict] = None) -> dict:
     """
     Score a complete assessment.
     answers: {question_id: user_answer_string}
     Returns: {"scores": {dimension: score}, "details": [...]}
     """
-    questions = get_assessment_questions(shuffle=False)
+    questions = questions or get_assessment_questions(shuffle=False)
     q_map = {q["id"]: q for q in questions}
 
     dim_scores: Dict[str, List[float]] = {
@@ -59,26 +73,30 @@ async def score_assessment(answers: dict) -> dict:
     }
     details = []
 
-    for qid, user_answer in answers.items():
+    async def score_one(qid: str, user_answer: str):
         q = q_map.get(qid)
         if not q:
-            continue
-
+            return None
         result = await score_open_ended(
             q["prompt"],
             user_answer,
             q.get("scoring_rubric", {"key_points": [], "max_score": 100}),
         )
-
-        dim_scores[q["dimension"]].append(result["score"])
-        details.append({
+        return {
             "question_id": qid,
             "dimension": q["dimension"],
             "dimension_name": q["dimension_name"],
             "score": result["score"],
             "feedback": result.get("feedback", ""),
             "user_answer": user_answer,
-        })
+        }
+
+    scored = await asyncio.gather(*(score_one(qid, answer) for qid, answer in answers.items()))
+    for item in scored:
+        if not item:
+            continue
+        dim_scores[item["dimension"]].append(item["score"])
+        details.append(item)
 
     final_scores = {}
     for dim, scores_list in dim_scores.items():

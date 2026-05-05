@@ -1,11 +1,12 @@
 # Render Blueprint: https://render.com/docs/blueprint-spec
-# 免费版本：无持久磁盘，重启后 SQLite 数据可能丢失，适合演示/评测
 services:
   - type: web
     name: braingym
     runtime: docker
     healthCheckPath: /health
     envVars:
+      - key: USE_LLM
+        value: "true"
       - key: LLM_BASE_URL
         value: https://api.deepseek.com
       - key: LLM_MODEL
